@@ -68,8 +68,13 @@ export default async function VigiaPage({ searchParams }: {
   const [latest] = await db.select().from(collectionRuns)
     .where(eq(collectionRuns.projectId, project.id))
     .orderBy(desc(collectionRuns.startedAt)).limit(1);
-  const sourceStates = latest ? await db.select().from(collectionRunSources)
-    .where(eq(collectionRunSources.runId, latest.id)).orderBy(collectionRunSources.id) : [];
+  const requestedRunId = /^\d+$/.test(sp.execucao ?? '') ? Number(sp.execucao) : NaN;
+  const [selectedRun] = Number.isSafeInteger(requestedRunId) ? await db.select().from(collectionRuns)
+    .where(and(eq(collectionRuns.id, requestedRunId), eq(collectionRuns.projectId, project.id)))
+    .limit(1) : [];
+  const detailRun = selectedRun ?? latest;
+  const sourceStates = detailRun ? await db.select().from(collectionRunSources)
+    .where(eq(collectionRunSources.runId, detailRun.id)).orderBy(collectionRunSources.id) : [];
 
   const conditions = [
     eq(mentions.projectId, project.id),
@@ -122,6 +127,9 @@ export default async function VigiaPage({ searchParams }: {
         <p className="text-sm text-slate-400">{latest
           ? 'Execução #' + latest.id + ' · ' + latest.status + ' · ' + formatDate(latest.startedAt)
           : 'Nenhuma execução registrada.'}</p>
+        {detailRun && detailRun.id !== latest?.id &&
+          <p className="text-sm text-sky-300">Detalhes históricos da execução #{detailRun.id}
+            {' · '}{detailRun.status}{' · '}{formatDate(detailRun.startedAt)}</p>}
         {latest && <p className="text-sm text-slate-300">
           {n(latest.newCount)} novas · {n(latest.duplicateCount)} duplicatas · {n(latest.discardedCount)} descartes
         </p>}
@@ -198,7 +206,10 @@ export default async function VigiaPage({ searchParams }: {
         <h2 className="text-lg font-semibold">Histórico de execuções</h2>
         {history.length ? <ul className="divide-y divide-slate-700">
           {history.map((run) => <li key={run.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-            <span>#{run.id} · {formatDate(run.startedAt)} · {run.status}</span>
+            <a className="text-sky-300 underline" href={qs({
+              execucao: String(run.id), entidade: entityFilter, fonte: sourceFilter,
+              dias: String(days), historico: String(page),
+            })}>#{run.id} · {formatDate(run.startedAt)} · {run.status} · detalhes por fonte</a>
             <span>{n(run.rawCount)} brutos · {n(run.newCount)} novos · {n(run.duplicateCount)} duplicados · {n(run.discardedCount)} descartados</span>
           </li>)}
         </ul> : <p className="text-sm text-slate-400">Sem histórico neste projeto.</p>}
