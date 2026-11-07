@@ -44,12 +44,12 @@ export function SearchBox() {
   }
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-2">
+    <form onSubmit={submit} className="flex w-full min-w-0 flex-wrap items-center gap-2">
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={semantic ? t('listening.searchConcept', 'Search a concept (e.g. complaints about prices)…') : t('ui.searchPlaceholder', 'Search text…')}
-        className="w-64 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-1.5 text-xs outline-none placeholder:text-slate-600"
+        className="min-w-0 w-40 flex-1 sm:w-64 sm:flex-none rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-1.5 text-xs outline-none placeholder:text-slate-600"
       />
       <button
         type="button"

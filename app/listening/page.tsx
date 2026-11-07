@@ -77,7 +77,7 @@ export default async function ListeningPage({ searchParams }: {
       <PageHeader title={t('page.listening.title', 'Listening')} subtitle={`${fmtNum(data.total)} ${t('listening.found', 'mentions found')}`} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-        <div className="mr-2"><SearchBox /></div>
+        <div className="w-full min-w-0 sm:mr-2 sm:w-auto"><SearchBox /></div>
         <TranslateBar current={readLang} langs={TRANSLATE_LANGS} />
         {semanticTerms && (
           <span className="flex items-center gap-1 rounded-full bg-violet-500/15 px-2.5 py-1 text-violet-300"
@@ -189,7 +189,7 @@ function FilterGroup({ label, items, param, current }: {
 }) {
   const active = current[param];
   return (
-    <span className="flex items-center gap-1">
+    <span className="flex max-w-full flex-wrap items-center gap-1">
       <span className="text-slate-500">{label}:</span>
       {items.map((it) => {
         const isActive = active === it.value;

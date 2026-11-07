@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Brand } from './brand';
+import { tFor, type Locale } from '@/lib/i18n-dict';
 
-export function LoginForm() {
+export function LoginForm({ locale }: { locale: Locale }) {
+  const t = tFor(locale);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -27,6 +29,8 @@ export function LoginForm() {
         return;
       }
       setError(true);
+    } catch {
+      setError(true);
     } finally {
       setBusy(false);
     }
@@ -37,12 +41,13 @@ export function LoginForm() {
       <div className="flex justify-center">
         <Brand size="lg" />
       </div>
-      <p className="text-center text-sm text-slate-400">Team access only</p>
+      <p className="text-center text-sm text-slate-400">{t('login.teamOnly', 'Team access only')}</p>
       <input
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="Work email"
+        placeholder={t('login.email', 'Work email')}
+        aria-label={t('login.email', 'Work email')}
         autoFocus
         autoComplete="username"
         className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2.5 text-sm outline-none placeholder:text-slate-600 focus:border-sky-500/60"
@@ -51,17 +56,18 @@ export function LoginForm() {
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
+        placeholder={t('login.password', 'Password')}
+        aria-label={t('login.password', 'Password')}
         autoComplete="current-password"
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
         className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2.5 text-sm outline-none placeholder:text-slate-600 focus:border-sky-500/60"
       />
-      {error && <p className="text-center text-xs text-red-400">Incorrect email or password.</p>}
+      {error && <p role="alert" className="text-center text-xs text-red-400">{t('login.error', 'Unable to sign in. Check your details and try again.')}</p>}
       <button type="submit" disabled={busy || !email || !password}
         className="flex items-center justify-center gap-2 rounded-lg bg-sky-500/90 px-4 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-sky-400 disabled:opacity-60">
-        {busy && <Loader2 className="size-4 animate-spin" />} Sign in
+        {busy && <Loader2 className="size-4 animate-spin" />} {t('login.submit', 'Sign in')}
       </button>
     </form>
   );

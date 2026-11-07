@@ -1,8 +1,11 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
-    branches: [main]
+    branches: [main, fix/radar-homologacao-p0]
   pull_request:
     branches: [main]
 
@@ -14,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -30,7 +33,17 @@ jobs:
         run: npm test
 
       - name: Build
-        run: npm run build
+        run: npm run build -- --webpack
+
+      - name: Production security E2E (isolated PGlite, ephemeral test secrets)
+        run: node scripts/e2e-security.mjs
         env:
-          # Build must succeed with no secrets: the app degrades gracefully.
-          SESSION_SECRET: ci-not-a-real-secret
+          RADAR_E2E_EVIDENCE_DIR: ${{ runner.temp }}/radar-e2e-evidence
+
+      - name: Upload security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-e2e-${{ github.sha }}
+          path: ${{ runner.temp }}/radar-e2e-evidence
+          if-no-files-found: warn

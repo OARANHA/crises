@@ -870,6 +870,21 @@ const PT: Record<string, string> = {
   'content.generateInLabel': 'Gerar conteúdo em {l}',
 };
 
+Object.assign(IT, {
+  'login.teamOnly': 'Accesso riservato al team',
+  'login.email': 'Email di lavoro',
+  'login.password': 'Password',
+  'login.error': 'Accesso non riuscito. Verifica i dati e riprova.',
+  'login.submit': 'Accedi',
+});
+Object.assign(PT, {
+  'login.teamOnly': 'Acesso exclusivo da equipe',
+  'login.email': 'E-mail profissional',
+  'login.password': 'Senha',
+  'login.error': 'Não foi possível entrar. Verifique seus dados e tente novamente.',
+  'login.submit': 'Entrar',
+});
+
 export const DICT: Record<Locale, Record<string, string>> = { en: {}, it: IT, pt: PT };
 
 /** Versione sincrona per i componenti client, che ricevono già il locale. */

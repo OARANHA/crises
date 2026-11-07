@@ -2,26 +2,20 @@
 
 import { useState } from 'react';
 import { Languages, Loader2 } from 'lucide-react';
-import { clientLocale, fmt, tFor } from '@/lib/i18n-dict';
+import { fmt, tFor, type Locale } from '@/lib/i18n-dict';
 
 const LANG_LABEL: Record<string, string> = {
   it: 'Italiano', en: 'English', es: 'Español', fr: 'Français',
   de: 'Deutsch', pt: 'Português', zh: '中文', ar: 'العربية',
 };
 
-/** Lingua di lettura preferita: cookie condiviso col futuro selettore di lingua. */
-function readTarget(): string {
-  if (typeof document === 'undefined') return 'it';
-  const m = document.cookie.match(/(?:^|;\s*)sr_locale=([a-z]{2})/);
-  return m?.[1] ?? 'it';
-}
-
 type Tr = { title: string | null; content: string };
 
 // Titolo + testo della mention con traduzione ON-DEMAND del singolo post: un
 // pulsante traduce al volo questa sola mention nella lingua di lettura, senza
 // toccare il resto della pagina. Toggle per tornare all'originale.
-export function MentionBody({ id, lang, url, title, content, allowTranslate }: {
+export function MentionBody({ id, lang, url, title, content, allowTranslate, locale }: {
+  locale: Locale;
   id: number;
   lang: string | null;
   url: string | null;
@@ -30,11 +24,11 @@ export function MentionBody({ id, lang, url, title, content, allowTranslate }: {
   /** false quando la pagina è già tradotta a livello globale (pulsante inutile). */
   allowTranslate: boolean;
 }) {
-  const t = tFor(clientLocale());
+  const t = tFor(locale);
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [showTr, setShowTr] = useState(false);
   const [tr, setTr] = useState<Tr | null>(null);
-  const target = readTarget();
+  const target = locale;
 
   const on = showTr && tr !== null;
   const dTitle = on ? (tr!.title ?? title) : title;

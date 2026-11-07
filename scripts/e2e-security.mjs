@@ -16,6 +16,7 @@
 // Nessuna credenziale reale viene stampata o salvata.
 
 import { spawn, execSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -24,7 +25,7 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const PORT_AUTH = 3111;
 const PORT_DEMO = 3112;
 const PORT_BOOT = 3113;
-const SESSION_SECRET = 'e2e-9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9';
+const SESSION_SECRET = randomBytes(32).toString('hex');
 const ADMIN_EMAIL = 'e2e-admin@e2e.test';
 const ADMIN_PASSWORD = 'e2e-admin-password-123';
 const MEMBER_EMAIL = 'member@e2e.test';
@@ -44,8 +45,8 @@ function waitReady(port, timeoutMs = 60_000) {
   return new Promise((resolve, reject) => {
     (async function poll() {
       try {
-        const res = await fetch(`http://127.0.0.1:${port}/landing`);
-        if (res.status > 0) return resolve();
+        const res = await fetch(`http://127.0.0.1:${port}/landing`, { signal: AbortSignal.timeout(2000) });
+        if (res.status >= 200 && res.status < 400) return resolve();
       } catch { /* non pronto */ }
       if (Date.now() - t0 > timeoutMs) return reject(new Error(`server :${port} non pronto`));
       setTimeout(poll, 500);
@@ -58,14 +59,15 @@ function startServer(port, env) {
   // le variabili decise qui (nessun DATABASE_URL ereditato che dirotterebbe su
   // Neon, nessun DEMO_MODE che resti appiccicato da uno scenario all'altro).
   const clean = { ...process.env };
-  delete clean.DATABASE_URL;
-  delete clean.DEMO_MODE;
-  delete clean.SESSION_SECRET;
-  delete clean.PGLITE_DIR;
+  clean.DATABASE_URL = '';
+  clean.DEMO_MODE = '';
+  clean.SESSION_SECRET = '';
+  clean.APP_PASSWORD = '';
+  clean.PGLITE_DIR = '';
   // detached + gruppo proprio: lo shutdown deve raggiungere ANCHE il vero
   // server (next-server è figlio di npx: uccidere solo npx lascia orfani che
   // tengono il porto occupato — successo nel primo run).
-  const child = spawn('npx', ['next', 'start', '-p', String(port)], {
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-p', String(port)], {
     cwd: ROOT, env: { ...clean, ...env }, stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
   });
@@ -278,9 +280,7 @@ async function scenarioBootSecret() {
 // ───────────────────────── main ─────────────────────────
 
 const t0 = Date.now();
-// Pulizia difensiva: orfani di run precedenti non devono tenere i porti.
-try { execSync('pkill -f "next-server" || true', { shell: '/bin/bash' }); } catch { /* nessuno */ }
-await new Promise((r) => setTimeout(r, 1500));
+// Only child process groups started by this runner are stopped. Never kill other Next.js servers.
 await scenarioAuthAndProjectless();
 await scenarioDemo();
 await scenarioBootSecret();
@@ -296,9 +296,9 @@ if (failed.length) {
   failed.forEach((f) => console.log(`  [${f.scenario}] ${f.name} — ${f.detail}`));
 }
 
-const evidenceDir = join(ROOT, 'docs/research/evidence/e2e-security');
+const evidenceDir = process.env.RADAR_E2E_EVIDENCE_DIR ?? join(ROOT, 'docs/research/evidence/e2e-security', new Date().toISOString().replaceAll(':', '-'));
 mkdirSync(evidenceDir, { recursive: true });
 writeFileSync(join(evidenceDir, 'e2e-security.log'),
   [...summary, '', ...log].join('\n') + '\n');
-console.log(`\nEvidenza salvata: docs/research/evidence/e2e-security/e2e-security.log`);
+console.log(`\nEvidenza salvata: ${evidenceDir}/e2e-security.log`);
 process.exit(failed.length ? 1 : 0);

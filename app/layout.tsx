@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { Sidebar } from '@/components/sidebar';
 import { getLocale, getT, setServerLocaleTag } from '@/lib/i18n';
@@ -10,8 +10,8 @@ import { LiveFavicon } from '@/components/live-favicon';
 import { getCurrentUser } from '@/lib/auth';
 import { countPeople } from '@/lib/people-insights';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const geistSans = localFont({ src: './fonts/Geist-Variable.woff2', variable: '--font-geist-sans', display: 'swap', weight: '100 900' });
+const geistMono = localFont({ src: './fonts/GeistMono-Variable.woff2', variable: '--font-geist-mono', display: 'swap', weight: '100 900' });
 
 export const metadata: Metadata = {
   title: {
@@ -70,7 +70,7 @@ export default async function RootLayout({
             </div>
           </div>
         </div>
-        <AutoRefresh stale={stale} />
+        <AutoRefresh stale={!demo && stale} />
         <LiveFavicon sentiment={pulse.sentiment} mentions24h={pulse.mentions24h} alerts={alertCount} />
       </body>
     </html>
