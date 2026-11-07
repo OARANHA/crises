@@ -20,6 +20,8 @@ export interface ListeningQuery {
   countries: string[];
   /** Feeds deste projeto, sem variável de módulo compartilhada. */
   rssFeeds?: string[];
+  /** Propaga falhas do provedor no coletor operacional em vez de converter erro em zero. */
+  strict?: boolean;
   /**
    * Id del progetto Talkwalker da interrogare (solo per i progetti in modalità
    * 'talkwalker'). Le altre fonti lo ignorano.
