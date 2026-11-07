@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [main, fix/radar-homologacao-p0]
+    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2]
   pull_request:
-    branches: [main]
+    branches: [main, fix/radar-homologacao-p0]
 
 jobs:
   build:
