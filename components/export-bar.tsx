@@ -23,7 +23,7 @@ const FORMAT_HINTS: Record<Format, string> = {
   pdf: 'Formatted report', xlsx: 'Data in sheets', docx: 'Document', pptx: 'Presentation',
 };
 
-export function ExportBar({ locale = 'en' }: { locale?: Locale }) {
+export function ExportBar({ locale = 'en', canUseStudio = false }: { locale?: Locale; canUseStudio?: boolean }) {
   const t = tFor(locale);
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<Format>('pdf');
@@ -49,11 +49,12 @@ export function ExportBar({ locale = 'en' }: { locale?: Locale }) {
   }, []);
 
   useEffect(() => {
+    if (!canUseStudio) return;
     fetch('/api/studio')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setStudio(d.saved ?? []))
       .catch(() => { /* export resta usabile anche senza */ });
-  }, []);
+  }, [canUseStudio]);
 
   function persist(next: Partial<{ format: Format; scope: string; days: number; selected: string[] }>) {
     const cur = { format, scope, days, selected: [...selected], ...next };

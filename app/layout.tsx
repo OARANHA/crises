@@ -7,7 +7,7 @@ import { AutoRefresh } from '@/components/auto-refresh';
 import { ExportBar } from '@/components/export-bar';
 import { getCurrentProject, getLastIngestAt, getProjects, getPulse, getRecentAlertCount } from '@/lib/data';
 import { LiveFavicon } from '@/components/live-favicon';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { countPeople } from '@/lib/people-insights';
 
 const geistSans = localFont({ src: './fonts/Geist-Variable.woff2', variable: '--font-geist-sans', display: 'swap', weight: '100 900' });
@@ -65,7 +65,7 @@ export default async function RootLayout({
           />
           <div className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-10 lg:py-6">
             <div className="mx-auto max-w-[1250px]">
-              <ExportBar locale={locale} />
+              <ExportBar locale={locale} canUseStudio={isAdmin(user)} />
               <main>{children}</main>
             </div>
           </div>
