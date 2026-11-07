@@ -22,8 +22,8 @@ export default async function AccountPage({ searchParams }: {
           <p className="mt-1"><span className="text-slate-500">Email:</span> {user.email}</p>
           <p className="mt-1">
             <span className="text-slate-500">Ruolo:</span>{' '}
-            {user.role === 'admin' ? 'Amministratore' : 'Membro'}
-            {user.role !== 'admin' && (
+            {user.role === 'admin' ? 'Administrador' : user.role === 'client' ? 'Cliente' : 'Membro'}
+            {user.role === 'member' && (
               <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${user.aiEnabled ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-500/15 text-slate-400'}`}>
                 AI {user.aiEnabled ? 'attiva' : 'in attesa di attivazione'}
               </span>
