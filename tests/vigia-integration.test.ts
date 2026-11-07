@@ -20,8 +20,8 @@ type Gdelt = typeof import('../lib/connectors/gdelt');
 
 let dbMod: Db, schema: Schema, pilot: Pilot, collector: Collector;
 let google: Google, gdelt: Gdelt;
-let originalGoogle: typeof Google.googleNews.fetchMentions;
-let originalGdelt: typeof Gdelt.gdelt.fetchMentions;
+let originalGoogle: Google['googleNews']['fetchMentions'];
+let originalGdelt: Gdelt['gdelt']['fetchMentions'];
 let project: Awaited<ReturnType<Pilot['ensureCrfrsPilot']>>;
 
 function raw(source: string, id: string, title: string, url: string): RawMention {
