@@ -42,18 +42,25 @@ export const gdelt: Connector = {
     if (countries.length === 1) query += ` sourcecountry:${countries[0]}`;
     else if (countries.length > 1) query += ` (${countries.map((c) => `sourcecountry:${c}`).join(' OR ')})`;
     const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query)}&mode=artlist&format=json&maxrecords=75&sort=datedesc&timespan=3d`;
-    // GDELT impone max 1 richiesta ogni 5 secondi PER IP — e l'IP di Vercel
-    // è condiviso con altri clienti, quindi il limite può essere già saturo.
-    // Retry pazienti con pause crescenti (fino a ~45s complessivi).
-    const waits = [0, 7000, 12000, 25000];
+    // O endpoint DOC pode responder HTTP 429 ou texto em vez de JSON.
+    // Limitar a uma repetição (>= 6 s) evita manter a coleta bloqueada por ~90 s.
+    const waits = [0, 6000];
     let data: { articles?: GdeltArticle[] } | null = null;
-    for (const waitMs of waits) {
-      if (waitMs) await new Promise((r) => setTimeout(r, waitMs));
+    for (let attempt = 0; attempt < waits.length; attempt++) {
+      if (waits[attempt]) await new Promise((resolve) => setTimeout(resolve, waits[attempt]));
       try {
         data = await fetchJson<{ articles?: GdeltArticle[] }>(url);
         break;
-      } catch (e) {
-        if (waitMs === waits[waits.length - 1]) throw e;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const throttled = /HTTP 429\b/i.test(message);
+        const nonJson = /non JSON/i.test(message);
+        const temporary = /HTTP 50[0234]\b/i.test(message);
+        if (!(throttled || nonJson || temporary) || attempt === waits.length - 1) {
+          if (throttled) throw new Error('HTTP 429 do GDELT: limite temporario de requisicoes; tente depois.');
+          if (nonJson) throw new Error('GDELT retornou resposta nao JSON; consulta nao validada.');
+          throw error;
+        }
       }
     }
     return (data?.articles ?? []).map((a) => ({
