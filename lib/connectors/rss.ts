@@ -35,6 +35,7 @@ function atomLink(link: unknown): string {
 async function fetchFeed(url: string): Promise<RawMention[]> {
   const xml = await fetchText(url);
   const parsed = new XMLParser({ ignoreAttributes: false }).parse(xml);
+  if (!parsed?.rss?.channel && !parsed?.feed) throw new Error('Resposta não contém RSS ou Atom');
   const feedHost = new URL(url).host.replace(/^www\./, '');
 
   // RSS 2.0 oppure Atom
@@ -68,6 +69,8 @@ export const rss: Connector = {
   async fetchMentions(q) {
     const feeds = (q.rssFeeds ?? []).filter((f) => /^https?:\/\//i.test(f.trim()))
       .map((f) => f.trim()).slice(0, 15);
-    return feeds.length ? collect(feeds.map(fetchFeed)) : [];
+    if (!feeds.length) return [];
+    const tasks = feeds.map(fetchFeed);
+    return q.strict ? (await Promise.all(tasks)).flat() : collect(tasks);
   },
 };
