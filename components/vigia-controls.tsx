@@ -35,10 +35,10 @@ export function VigiaControls({ projectId, canWrite }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button type="button" onClick={execute} disabled={busy}
-        className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+        className="vigia-cta">
         {busy ? 'Executando…' : projectId ? 'Executar coleta manual' : 'Criar projeto CRF-RS'}
       </button>
-      <span role="status" aria-live="polite" className="text-sm text-slate-300">{message}</span>
+      <span role="status" aria-live="polite" className="text-xs text-[var(--muted)]">{message}</span>
     </div>
   );
 }
