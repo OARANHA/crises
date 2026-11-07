@@ -1,8 +1,7 @@
-import { rss, setRssFeeds } from '../lib/connectors/rss';
+import { rss } from '../lib/connectors/rss';
 
 async function main() {
-  setRssFeeds(['https://www.ansa.it/sito/ansait_rss.xml', 'https://feeds.bbci.co.uk/news/technology/rss.xml']);
-  const q = { anyTerms: [], allTerms: [], excludeTerms: [], languages: [], countries: [] };
+  const q = { anyTerms: [], allTerms: [], excludeTerms: [], languages: [], countries: [], rssFeeds: ['https://www.ansa.it/sito/ansait_rss.xml', 'https://feeds.bbci.co.uk/news/technology/rss.xml'] };
   const items = await rss.fetchMentions(q);
   console.log(`${items.length} articoli da 2 feed`);
   for (const it of items.slice(0, 3)) {
