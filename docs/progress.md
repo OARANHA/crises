@@ -262,3 +262,22 @@ Fonte desta execução: ZIP `radar-intelligence-correcoes-p0.zip`, inicialmente 
 Resultado e evidências atuais: [docs/homologacao/README.md](homologacao/README.md). A reprodução encontrou **14 testes de integração**, incluídos nos 245 originais. A suíte atual tem 261 testes totais, mais 27 E2E de produção e 7 verificações extras de Server Actions/Studio. Uma lacuna P0 real nas Server Actions foi reproduzida e corrigida; portanto o antigo 27/27 não cobria sozinho a alegação de demo estritamente read-only.
 
 Código em execução na demo de produção: `746e509320fe72bd91981f740d19127b4c4ec4d1`, branch `fix/radar-homologacao-p0`; evidências de fechamento podem estar em commit documental posterior. Não houve merge. PR/CI remoto permanecem dependentes da API GitHub acessível e de conferência do HEAD exato. Retenção/exportação segue P0 pendente; IA real em pt-BR não validada; Incremento 3 bloqueado.
+
+
+## Sessão 2026-11-07 — VigiaElus / CRF-RS — Etapas 1 e 2
+
+**Origem:** ordem explícita do proprietário para implementar o piloto `CRF-RS — Reputação e Comunicação`, em branch isolada de `fix/radar-homologacao-p0`. Esta entrada registra mudanças verificáveis no Git; **o status de qualidade continua PENDENTE até CI, banco e navegador efetivamente testados**.
+
+- Reconciliados: repositório privado `OARANHA/wmemory` (`MEMORY.md` e `OPERATING_RULES.md`); banco ELUS Memory Admin `vigiaelus`; AGENTS.md, homologação P0 e roadmap do repositório.
+- HEAD P0 usado como base: `e8d127e1c1b706fe05bb5a87af22d59e753328c3`.
+- CI do HEAD P0: run https://github.com/OARANHA/crises/actions/runs/42323441870 = **FAILURE**; install/lint/TS/261 testes/build/security E2E (27 controles) passaram, mas runner Server Actions falhou no Node 22 por inline `tsx -e` / import ESM não disponível. Correção incluída apenas na branch do piloto; verificar novo CI antes de atribuir GREEN.
+- Branch criada: `feat/vigiaelus-crfrs-etapas-1-2`; app P0 e branch original preservados, nenhuma PR mergeada.
+- Implementado: definições de três entidades, aliases restritos, canonicalização de URL e razão de descarte; fonte por projeto; piloto idempotente, coleta autenticada explicitamente pelo ID, preservação de DEMO_MODE e ownership.
+- Migradas estruturas aditivas: `projects.enabled_sources/pilot_key`, `mentions.canonical_key`, `collection_runs`, `collection_run_sources`, `mention_entities` e `mention_discoveries`.
+- Isolado o estado global `source_status` por ID de projeto; RSS passa a receber feeds diretamente na consulta, sem memória global mutável.
+- Interface operacional `/vigia`: entidades, habilitação de fontes, status, histórico e menções filtradas.
+- Testes criados: `tests/vigia-core.test.ts` e `tests/vigia-integration.test.ts` (stubs sintéticos, PGlite de teste, histórico após reabertura e falhas parciais).
+- RSS real, notícia estruturada do portal CRF-RS, verificação de resultados públicos e teste visual **PENDENTES / NÃO TESTADOS**. Google News e GDELT configurados mas não declarados operacionalmente validados.
+- **Bloqueio produtivo preservado:** P0 de retenção e exportação antes do descarte. Não houve modificação de banco produtivo, purge, deploy nem merge.
+- Rastreabilidade completa e limites em `docs/vigiaelus-crfrs.md`.
+
