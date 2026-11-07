@@ -27,7 +27,7 @@ if (/(?:PRIVATE KEY-----|ghp_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,})/.test(diff)) 
 }
 const prompt = 'Revisor Docent do VigiaElus. Examine o diff fornecido e PROPOR apenas atualizações em README, .env.example, .claude/pipeline/project-doc.md ou docs/. Não execute comandos, não mude arquivos, não invente funcionalidades nem métricas. Responda em português com recomendações objetivas. DIFF:\n'+diff;
 const res = spawnSync('claude',['-p','--permission-mode','plan',prompt],{
-  cwd:root,encoding:'utf8',timeout:45000,shell:process.platform==='win32',maxBuffer:1024*1024,
+  cwd:root,encoding:'utf8',timeout:45000,shell:false,maxBuffer:1024*1024,
 });
 if (res.status===0 && res.stdout?.trim()) {
   writeFileSync(outfile,msg+'\n## Recomendações do Claude\n\n'+res.stdout.trim()+'\n','utf8');
