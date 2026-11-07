@@ -52,6 +52,8 @@ export const projects = pgTable('projects', {
    * query a tre campi, che resta valida finché il piano non viene salvato.
    */
   queryPlan: jsonb('query_plan').$type<import('@/lib/query-plan').QueryPlan>(),
+  enabledSources: jsonb('enabled_sources').$type<string[]>().notNull().default([]),
+  pilotKey: text('pilot_key'),
   // Proprietario del progetto (chi lo ha creato); null = legacy/condiviso a tutti
   ownerId: integer('owner_id'),
   // 'private' = solo il proprietario e l'admin; 'shared' = tutto il team lo vede
@@ -149,6 +151,65 @@ export const mentions = pgTable('mentions', {
   // Da quale file importato proviene questa mention. Senza questo legame non
   // si può rimappare o cancellare un file senza toccare il resto del progetto.
   importFileId: integer('import_file_id'),
+  canonicalKey: text('canonical_key'),
+});
+
+
+/** Histórico por projeto, nunca estado global de fontes. */
+export const collectionRuns = pgTable('collection_runs', {
+  id: serial('id').primaryKey(),
+  projectId: integer('project_id').notNull(),
+  trigger: text('trigger').notNull().default('manual'),
+  status: text('status').notNull().default('pending'),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  rawCount: integer('raw_count').notNull().default(0),
+  acceptedCount: integer('accepted_count').notNull().default(0),
+  newCount: integer('new_count').notNull().default(0),
+  duplicateCount: integer('duplicate_count').notNull().default(0),
+  discardedCount: integer('discarded_count').notNull().default(0),
+  error: text('error'),
+});
+
+export const collectionRunSources = pgTable('collection_run_sources', {
+  id: serial('id').primaryKey(),
+  runId: integer('run_id').notNull(),
+  projectId: integer('project_id').notNull(),
+  source: text('source').notNull(),
+  originUrl: text('origin_url'),
+  query: text('query').notNull().default(''),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  status: text('status').notNull().default('pending'),
+  rawCount: integer('raw_count').notNull().default(0),
+  acceptedCount: integer('accepted_count').notNull().default(0),
+  newCount: integer('new_count').notNull().default(0),
+  duplicateCount: integer('duplicate_count').notNull().default(0),
+  discardedCount: integer('discarded_count').notNull().default(0),
+  discardReasons: jsonb('discard_reasons').$type<Record<string, number>>().notNull().default({}),
+  httpStatus: integer('http_status'),
+  error: text('error'),
+  durationMs: integer('duration_ms'),
+  lastSuccessAt: timestamp('last_success_at', { withTimezone: true }),
+});
+
+export const mentionEntities = pgTable('mention_entities', {
+  id: serial('id').primaryKey(),
+  projectId: integer('project_id').notNull(),
+  mentionId: integer('mention_id').notNull(),
+  entityId: integer('entity_id').notNull(),
+});
+
+export const mentionDiscoveries = pgTable('mention_discoveries', {
+  id: serial('id').primaryKey(),
+  runId: integer('run_id').notNull(),
+  projectId: integer('project_id').notNull(),
+  mentionId: integer('mention_id').notNull(),
+  source: text('source').notNull(),
+  externalId: text('external_id').notNull(),
+  url: text('url'),
+  duplicate: integer('duplicate').notNull().default(0),
+  discoveredAt: timestamp('discovered_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const stories = pgTable('stories', {
