@@ -627,3 +627,9 @@ new connectors, tests. See [CHANGELOG.md](CHANGELOG.md) for how the project got 
 
 [GNU AGPL-3.0](LICENSE) © Massimo Scognamiglio and contributors. If you run a modified
 version as a network service, you must make your source available under the same license.
+
+## VigiaElus - Portal do cliente
+
+Client role: /cliente. Admin: /clientes. Read-only APIs: /api/cliente/overview, /api/cliente/mentions. External project access is explicit via client_project_access. Global RADAR_MCP_TOKEN stays administrative.
+
+Codebase map: .claude/pipeline/project-doc.md. Docent review hook: .githooks/pre-commit. Documentation changes are reviewed in PR.
