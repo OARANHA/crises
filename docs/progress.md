@@ -254,3 +254,11 @@ Credenciais dos testes: sintéticas, em bancos usa-e-getta destruídos após o r
 ### Nota de deploy
 
 `SESSION_SECRET` independente passa a ser pré-requisito absoluto de produção (boot recusado sem ele). Deployments que usavam `APP_PASSWORD` como segredo de sessão devem gerar `SESSION_SECRET` próprio (`openssl rand -hex 32`) — trocar o segredo revoga todas as sessões existentes (comportamento desejado).
+
+## Homologação cloud independente — 2026-11-06 (America/Sao_Paulo)
+
+Fonte desta execução: ZIP `radar-intelligence-correcoes-p0.zip`, inicialmente sem Git. O proprietário autorizou sua importação no repositório limpo `OARANHA/crises`; baseline verdadeiro `875aac37f58925b7ddf502843c75c184a1b7dc22`. Os commits históricos acima não vieram no ZIP e não foram reconstruídos.
+
+Resultado e evidências atuais: [docs/homologacao/README.md](homologacao/README.md). A reprodução encontrou **14 testes de integração**, incluídos nos 245 originais. A suíte atual tem 261 testes totais, mais 27 E2E de produção e 7 verificações extras de Server Actions/Studio. Uma lacuna P0 real nas Server Actions foi reproduzida e corrigida; portanto o antigo 27/27 não cobria sozinho a alegação de demo estritamente read-only.
+
+Código em execução na demo de produção: `746e509320fe72bd91981f740d19127b4c4ec4d1`, branch `fix/radar-homologacao-p0`; evidências de fechamento podem estar em commit documental posterior. Não houve merge. PR/CI remoto permanecem dependentes da API GitHub acessível e de conferência do HEAD exato. Retenção/exportação segue P0 pendente; IA real em pt-BR não validada; Incremento 3 bloqueado.
