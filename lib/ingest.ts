@@ -5,7 +5,6 @@ import { countryFromDomain, countryFromUrl, toCountryCode } from '@/lib/country-
 import { mentions, projects, benchmarkEntities } from '@/lib/db/schema';
 import { CONNECTORS, kindOf } from '@/lib/connectors';
 import { setTelegramChannels } from '@/lib/connectors/telegram';
-import { setRssFeeds } from '@/lib/connectors/rss';
 import { hydrateConnectorCredentials } from '@/lib/connector-credentials';
 import type { RawMention, ListeningQuery } from '@/lib/connectors/types';
 import { compilePlan, matchesQuery, queriesMatching, validatePlan, type CompiledQuery } from '@/lib/query-plan';
@@ -214,10 +213,11 @@ export async function ingestProject(project: typeof projects.$inferSelect) {
     excludeTerms: project.excludeTerms ?? [],
     languages: project.languages,
     countries: project.countries ?? [],
+    rssFeeds: project.rssFeeds ?? [],
     talkwalkerProject: project.talkwalkerProject ?? undefined,
     talkwalkerTopics: project.talkwalkerTopics ?? [],
   };
-  const status: SourceStatus = (await getMeta<SourceStatus>('source_status')) ?? {};
+  const status: SourceStatus = (await getMeta<SourceStatus>('source_status_' + project.id)) ?? {};
   let inserted = 0;
 
   // Il piano d'ascolto, se il progetto ne ha uno: sostituisce la query unica
@@ -244,7 +244,6 @@ export async function ingestProject(project: typeof projects.$inferSelect) {
   };
 
   setTelegramChannels(project.telegramChannels ?? []);
-  setRssFeeds(project.rssFeeds ?? []);
   // Carica le chiavi API inserite dall'utente prima di decidere quali fonti sono attive.
   await hydrateConnectorCredentials();
   // Un progetto 'talkwalker' interroga SOLO Talkwalker; tutti gli altri non lo
@@ -265,7 +264,7 @@ export async function ingestProject(project: typeof projects.$inferSelect) {
         error: `Budget Talkwalker del giorno esaurito: ~${spent} credits su ${budget}. Riprende domani, oppure alza TALKWALKER_DAILY_CREDITS.`,
         at: new Date().toISOString(), lastOkAt: status.talkwalker?.lastOkAt,
       };
-      await setMeta('source_status', status);
+      await setMeta('source_status_' + project.id, status);
     }
   }
 
@@ -438,7 +437,7 @@ export async function ingestProject(project: typeof projects.$inferSelect) {
     };
   }
 
-  await setMeta('source_status', status);
+  await setMeta('source_status_' + project.id, status);
   await setMeta('last_ingest_at', new Date().toISOString());
   // Le mention raccolte prima che il paese esistesse hanno ancora il loro
   // indirizzo: ogni giro ne recupera un blocco, finché non ne restano.
