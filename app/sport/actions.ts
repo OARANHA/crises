@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { sportSources } from '@/lib/db/schema';
-import { getCurrentProject } from '@/lib/data';
+import { getActionProject } from '@/lib/action-auth';
 import { hydrateConnectorCredentials } from '@/lib/connector-credentials';
 import { ingestSport } from '@/lib/sport';
 
@@ -14,7 +14,7 @@ const COMPETITIONS = new Set(['SA', 'PL', 'CL', 'BL1', 'PD', 'FL1']);
  *  quotata) — stesso principio delle Recensioni: aggiungerla non deve
  *  significare aspettare il ciclo notturno per vedere se funziona. */
 export async function addSportSourceAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
 
   const competition = String(formData.get('competition') ?? '');
@@ -39,7 +39,7 @@ export async function addSportSourceAction(formData: FormData) {
 }
 
 export async function removeSportSourceAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
   const id = Number(formData.get('id'));
   if (!id) return;

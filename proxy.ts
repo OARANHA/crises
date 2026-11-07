@@ -20,7 +20,14 @@ import { SESSION_COOKIE, verifySession } from '@/lib/session';
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   // Public read-only demo: no auth gate at all.
-  if (process.env.DEMO_MODE === '1') return NextResponse.next();
+  if (process.env.DEMO_MODE === '1') {
+    // Server Actions also accept progressive multipart form submissions without
+    // a Next-Action header. Block all page POSTs, not just API mutations.
+    if (req.method === 'POST' && !pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'demo mode: read-only' }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
   if (pathname.startsWith('/landing') || pathname.startsWith('/login')
     || pathname.startsWith('/api/auth') || pathname.startsWith('/api/cron/')
     || pathname.startsWith('/share/') || pathname.startsWith('/api/mcp')) {

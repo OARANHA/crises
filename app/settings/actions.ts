@@ -1,5 +1,7 @@
 'use server';
 
+import { getActionUser, canEditActionProject } from '@/lib/action-auth';
+
 import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -7,14 +9,14 @@ import { cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { getDb, setMeta } from '@/lib/db';
 import { benchmarkEntities, projects, shareLinks } from '@/lib/db/schema';
-import { getCurrentUser, isAdmin } from '@/lib/auth';
+import { isAdmin } from '@/lib/auth';
 import { verifyPasswordHash } from '@/lib/password';
 
 export type ActionResult = { ok: boolean; msg: string };
 
 /** Admin: set the API spend budget (USD). */
 export async function updateApiBudget(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!isAdmin(user)) return { ok: false, msg: 'Admins only.' };
   const amount = Number(formData.get('budget'));
   if (!Number.isFinite(amount) || amount <= 0) return { ok: false, msg: 'Enter a positive amount.' };
@@ -25,7 +27,7 @@ export async function updateApiBudget(_prev: ActionResult, formData: FormData): 
 
 /** Admin: choose the AI engine (Anthropic / OpenAI / Grok) that powers every AI feature. */
 export async function updateAiProvider(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!isAdmin(user)) return { ok: false, msg: 'Admins only.' };
   const provider = String(formData.get('provider') ?? '').trim();
   const { AI_PROVIDERS } = await import('@/lib/ai-provider');
@@ -37,7 +39,7 @@ export async function updateAiProvider(_prev: ActionResult, formData: FormData):
 
 /** Admin: override the fast/smart model ids for one provider (blank = default). */
 export async function updateAiModels(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!isAdmin(user)) return { ok: false, msg: 'Admins only.' };
   const provider = String(formData.get('provider') ?? '').trim();
   const { AI_PROVIDERS } = await import('@/lib/ai-provider');
@@ -51,7 +53,7 @@ export async function updateAiModels(_prev: ActionResult, formData: FormData): P
 
 /** Admin: reset the spend counter (starts a new window). Requires the admin's own password. */
 export async function resetApiSpend(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!isAdmin(user) || !user) return { ok: false, msg: 'Admins only.' };
   const password = String(formData.get('password') ?? '');
   if (!password) return { ok: false, msg: 'Enter your account password.' };
@@ -83,13 +85,7 @@ function parseProjectForm(formData: FormData) {
 
 /** Verifica che l'utente possa modificare il progetto (proprietario o admin). */
 async function assertCanEdit(projectId: number): Promise<boolean> {
-  const { getCurrentUser, isAdmin } = await import('@/lib/auth');
-  const db = await getDb();
-  const user = await getCurrentUser();
-  if (!user) return false;
-  if (isAdmin(user)) return true;
-  const [p] = await db.select({ ownerId: projects.ownerId }).from(projects).where(eq(projects.id, projectId));
-  return p?.ownerId === user.id;
+  return canEditActionProject(projectId);
 }
 
 export async function updateProject(formData: FormData) {
@@ -111,9 +107,8 @@ export async function updateProject(formData: FormData) {
  * di partenza della pagina Query, dove si trasforma in query da provare.
  */
 export async function createProject(formData: FormData) {
-  const { getCurrentUser } = await import('@/lib/auth');
   const db = await getDb();
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!user) return;
   const data = parseProjectForm(formData);
   if (!data.name) return;
@@ -155,9 +150,8 @@ function parseTalkwalkerForm(formData: FormData) {
  * documenti (o da tutti). Duplicare la query sarebbe duplicare Talkwalker.
  */
 export async function createTalkwalkerProject(formData: FormData) {
-  const { getCurrentUser } = await import('@/lib/auth');
   const db = await getDb();
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!user) return;
   const data = parseTalkwalkerForm(formData);
   if (!data.name || !data.talkwalkerProject) return;
@@ -181,7 +175,7 @@ export async function updateTalkwalkerProject(formData: FormData) {
 
 /** Crea un progetto in modalità "upload" (nessuno scraping) e va al caricamento file. */
 export async function createImportProject(formData: FormData) {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!user) return;
   const name = String(formData.get('name') ?? '').trim().slice(0, 80);
   if (!name) return;
@@ -217,7 +211,7 @@ export async function updateImportProject(formData: FormData) {
  * distrazione; una password no.
  */
 export async function deleteProject(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!user) return { ok: false, msg: 'Not signed in.' };
   const db = await getDb();
   const id = Number(formData.get('id'));
@@ -241,7 +235,7 @@ export async function addEntity(formData: FormData) {
   const projectId = Number(formData.get('projectId'));
   const name = String(formData.get('name') ?? '').trim();
   const keywords = parseKeywords(String(formData.get('keywords') ?? ''));
-  if (!projectId || !name) return;
+  if (!projectId || !name || !(await assertCanEdit(projectId))) return;
   await db.insert(benchmarkEntities).values({
     projectId, name, keywords: keywords.length ? keywords : [name],
   });
@@ -255,6 +249,8 @@ export async function updateEntity(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim();
   const keywords = parseKeywords(String(formData.get('keywords') ?? ''));
   if (!id || !name) return;
+  const [entity] = await db.select().from(benchmarkEntities).where(eq(benchmarkEntities.id, id));
+  if (!entity || !(await assertCanEdit(entity.projectId))) return;
   await db.update(benchmarkEntities).set({ name, keywords: keywords.length ? keywords : [name] })
     .where(eq(benchmarkEntities.id, id));
   revalidatePath('/settings');
@@ -265,7 +261,9 @@ export async function setOwnBrand(formData: FormData) {
   const db = await getDb();
   const id = Number(formData.get('id'));
   const projectId = Number(formData.get('projectId'));
-  if (!id || !projectId) return;
+  if (!id || !projectId || !(await assertCanEdit(projectId))) return;
+  const [entity] = await db.select().from(benchmarkEntities).where(eq(benchmarkEntities.id, id));
+  if (!entity || entity.projectId !== projectId) return;
   const makeBrand = String(formData.get('makeBrand') ?? '1') === '1';
   // Un solo brand per progetto: azzero gli altri, poi imposto (o tolgo) questo.
   await db.update(benchmarkEntities).set({ isOwnBrand: 0 }).where(eq(benchmarkEntities.projectId, projectId));
@@ -281,6 +279,8 @@ export async function deleteEntity(formData: FormData) {
   const db = await getDb();
   const id = Number(formData.get('id'));
   if (!id) return;
+  const [entity] = await db.select().from(benchmarkEntities).where(eq(benchmarkEntities.id, id));
+  if (!entity || !(await assertCanEdit(entity.projectId))) return;
   await db.delete(benchmarkEntities).where(eq(benchmarkEntities.id, id));
   revalidatePath('/settings');
   revalidatePath('/benchmark');
@@ -290,7 +290,7 @@ export async function createShareLink(formData: FormData) {
   const db = await getDb();
   const projectId = Number(formData.get('projectId'));
   const days = Math.max(1, Math.min(30, Number(formData.get('days')) || 7));
-  if (!projectId) return;
+  if (!projectId || !(await assertCanEdit(projectId))) return;
   await db.insert(shareLinks).values({
     projectId,
     token: randomBytes(16).toString('hex'),
@@ -303,6 +303,8 @@ export async function revokeShareLink(formData: FormData) {
   const db = await getDb();
   const id = Number(formData.get('id'));
   if (!id) return;
+  const [share] = await db.select().from(shareLinks).where(eq(shareLinks.id, id));
+  if (!share || !(await assertCanEdit(share.projectId))) return;
   await db.delete(shareLinks).where(eq(shareLinks.id, id));
   revalidatePath('/settings');
 }
@@ -313,8 +315,8 @@ export async function revokeShareLink(formData: FormData) {
  * fonti a pagamento senza toccare variabili d'ambiente né codice.
  */
 export async function saveConnectorKeysAction(connectorId: string, formData: FormData) {
-  const { getCurrentUser, isAdmin } = await import('@/lib/auth');
-  const user = await getCurrentUser();
+  const { isAdmin } = await import('@/lib/auth');
+  const user = await getActionUser();
   if (!isAdmin(user)) return;
 
   const { CREDENTIAL_FIELDS, saveConnectorCredentials } = await import('@/lib/connector-credentials');

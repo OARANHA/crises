@@ -1,15 +1,17 @@
 'use server';
 
+import { getActionUser } from '@/lib/action-auth';
+
 import { cookies } from 'next/headers';
 import { eq, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { getCurrentUser } from '@/lib/auth';
+
 import { hashPassword, verifyPasswordHash } from '@/lib/password';
 import { SESSION_COOKIE, signSession } from '@/lib/session';
 
 export async function changePassword(_prev: unknown, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!user) return { error: 'session expired' };
 
   const current = String(formData.get('current') ?? '').trim();

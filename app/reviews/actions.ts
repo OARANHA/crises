@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { reviewSources } from '@/lib/db/schema';
-import { getCurrentProject } from '@/lib/data';
+import { getActionProject } from '@/lib/action-auth';
 import { hydrateConnectorCredentials } from '@/lib/connector-credentials';
 import { ingestReviews } from '@/lib/reviews';
 
@@ -13,7 +13,7 @@ const TYPES = new Set(['appstore', 'googleplaces', 'yelp']);
 /** Aggiunge una fonte e la interroga subito: aggiungerla non deve significare
  *  aspettare il ciclo notturno per vedere se funziona. */
 export async function addReviewSourceAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
 
   const type = String(formData.get('type') ?? '');
@@ -42,7 +42,7 @@ export async function addReviewSourceAction(formData: FormData) {
 }
 
 export async function removeReviewSourceAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
   const id = Number(formData.get('id'));
   if (!id) return;

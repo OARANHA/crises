@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { projects, type KeyMessage } from '@/lib/db/schema';
-import { getCurrentProject } from '@/lib/data';
+import { getActionProject } from '@/lib/action-auth';
 import { callClaude, claudeAvailable, MODELS } from '@/lib/claude';
 
 /**
@@ -43,7 +43,7 @@ function fallbackTerms(message: string): string[] {
 }
 
 export async function saveKeyMessages(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
   const raw = String(formData.get('messages') ?? '');
   const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 8);

@@ -1,11 +1,13 @@
 'use server';
 
+import { getActionUser } from '@/lib/action-auth';
+
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 import { getDb } from '@/lib/db';
 import { projects } from '@/lib/db/schema';
-import { getCurrentUser, isAdmin } from '@/lib/auth';
+import { isAdmin } from '@/lib/auth';
 import { buildPlan, probePlan, retagMentions, savePlan, type BuildResult, type PlanProbe } from '@/lib/query-builder';
 import { planFromRules, validatePlan, type QueryPlan } from '@/lib/query-plan';
 
@@ -13,7 +15,7 @@ import { planFromRules, validatePlan, type QueryPlan } from '@/lib/query-plan';
 // modificare il progetto: il piano decide che cosa Radar raccoglie.
 
 async function editable(projectId: number) {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   if (!user) return null;
   const db = await getDb();
   const [p] = await db.select().from(projects).where(eq(projects.id, projectId));

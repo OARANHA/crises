@@ -1,15 +1,17 @@
 'use server';
 
+import { getActionUser } from '@/lib/action-auth';
+
 import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { getCurrentUser, isAdmin } from '@/lib/auth';
+import { isAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 
 async function requireAdmin() {
-  const user = await getCurrentUser();
+  const user = await getActionUser();
   return isAdmin(user) ? user : null;
 }
 

@@ -1,8 +1,10 @@
 'use server';
 
+import { getActionUser } from '@/lib/action-auth';
+
 import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser, isAdmin } from '@/lib/auth';
+import { isAdmin } from '@/lib/auth';
 import { saveConnectorCredentials } from '@/lib/connector-credentials';
 
 /**
@@ -13,7 +15,7 @@ import { saveConnectorCredentials } from '@/lib/connector-credentials';
  * smettono di funzionare, e la pagina lo dice prima del clic.
  */
 export async function generateMcpTokenAction(): Promise<{ token?: string; error?: string }> {
-  if (!isAdmin(await getCurrentUser())) return { error: 'Solo un amministratore può generare il token.' };
+  if (!isAdmin(await getActionUser())) return { error: 'Solo un amministratore può generare il token.' };
   const token = `rdr_${randomBytes(32).toString('base64url')}`;
   await saveConnectorCredentials('mcp', { RADAR_MCP_TOKEN: token });
   revalidatePath('/mcp');

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getDb, setMeta } from '@/lib/db';
 import { projects } from '@/lib/db/schema';
-import { getCurrentProject } from '@/lib/data';
+import { getActionProject } from '@/lib/action-auth';
 import { ingestTrials, resolveTrialTerms } from '@/lib/trials';
 
 /**
@@ -13,7 +13,7 @@ import { ingestTrials, resolveTrialTerms } from '@/lib/trials';
  * scoprire se trovano qualcosa.
  */
 export async function saveEvidenceTermsAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
   const inputs = [...new Set(String(formData.get('terms') ?? '')
     .split(/[,\n]/).map((t) => t.trim()).filter((t) => t.length >= 2))].slice(0, 5);

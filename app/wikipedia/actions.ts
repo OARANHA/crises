@@ -4,12 +4,12 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { wikiPages } from '@/lib/db/schema';
-import { getCurrentProject } from '@/lib/data';
+import { getActionProject } from '@/lib/action-auth';
 import { ingestWikiEdits } from '@/lib/wikipedia';
 
 /** Aggiunge una pagina e ne scarica subito lo storico recente — stesso principio di Reviews e Sport. */
 export async function addWikiPageAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
 
   const title = String(formData.get('title') ?? '').trim();
@@ -23,7 +23,7 @@ export async function addWikiPageAction(formData: FormData) {
 }
 
 export async function removeWikiPageAction(formData: FormData) {
-  const project = await getCurrentProject();
+  const project = await getActionProject();
   if (!project) return;
   const id = Number(formData.get('id'));
   if (!id) return;
