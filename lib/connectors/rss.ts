@@ -6,13 +6,6 @@ import { collect, fetchText, stripHtml, truncate } from './util';
 // (testate, blog, Google Alerts, subreddit, canali YouTube…).
 // Modello watchlist: i feed si configurano per progetto in Gestione progetti.
 
-let watchedFeeds: string[] = [];
-
-/** Impostato dall'ingest prima del fetch, coi feed del progetto corrente. */
-export function setRssFeeds(feeds: string[]) {
-  watchedFeeds = feeds.filter((f) => /^https?:\/\//i.test(f.trim())).map((f) => f.trim());
-}
-
 type RssItem = {
   title?: unknown; link?: unknown; pubDate?: string; description?: unknown;
   'content:encoded'?: unknown; guid?: unknown;
@@ -42,6 +35,7 @@ function atomLink(link: unknown): string {
 async function fetchFeed(url: string): Promise<RawMention[]> {
   const xml = await fetchText(url);
   const parsed = new XMLParser({ ignoreAttributes: false }).parse(xml);
+  if (!parsed?.rss?.channel && !parsed?.feed) throw new Error('Resposta não contém RSS ou Atom');
   const feedHost = new URL(url).host.replace(/^www\./, '');
 
   // RSS 2.0 oppure Atom
@@ -72,8 +66,11 @@ export const rss: Connector = {
   label: 'Custom RSS feeds',
   tier: 'free',
   enabled: () => true,
-  async fetchMentions() {
-    if (watchedFeeds.length === 0) return [];
-    return collect(watchedFeeds.slice(0, 15).map(fetchFeed));
+  async fetchMentions(q) {
+    const feeds = (q.rssFeeds ?? []).filter((f) => /^https?:\/\//i.test(f.trim()))
+      .map((f) => f.trim()).slice(0, 15);
+    if (!feeds.length) return [];
+    const tasks = feeds.map(fetchFeed);
+    return q.strict ? (await Promise.all(tasks)).flat() : collect(tasks);
   },
 };

@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react';
 import { getMeta } from '@/lib/db';
+import { getCurrentProject } from '@/lib/data';
 import {
   CONNECTORS, SOURCE_CATEGORY, CATEGORY_ORDER, CATEGORY_LABEL, type SourceCategory,
 } from '@/lib/connectors';
@@ -41,8 +42,10 @@ export default async function FontiPage() {
   const t = await getT();
   // Hydrate saved keys before reading the "active" status of the connectors.
   await hydrateConnectorCredentials();
+  const project = await getCurrentProject();
   const [sourceStatus, credStatuses, currentUser] = await Promise.all([
-    getMeta<SourceStatus>('source_status'), getConnectorCredStatuses(), getCurrentUser(),
+    project ? getMeta<SourceStatus>('source_status_' + project.id) : Promise.resolve(null),
+    getConnectorCredStatuses(), getCurrentUser(),
   ]);
   const canEditKeys = isAdmin(currentUser);
 

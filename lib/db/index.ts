@@ -441,6 +441,51 @@ const DDL = [
   `ALTER TABLE projects ADD COLUMN IF NOT EXISTS query_plan JSONB`,
   `ALTER TABLE mentions ADD COLUMN IF NOT EXISTS query_ids JSONB NOT NULL DEFAULT '[]'`,
   `CREATE INDEX IF NOT EXISTS mentions_query_ids ON mentions USING gin (query_ids)`,
+  // VigiaElus: migrations incrementais no mecanismo já existente.
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS enabled_sources JSONB NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS pilot_key TEXT`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS projects_pilot_unique ON projects (pilot_key) WHERE pilot_key IS NOT NULL`,
+  `ALTER TABLE mentions ADD COLUMN IF NOT EXISTS canonical_key TEXT`,
+  `CREATE INDEX IF NOT EXISTS mentions_canonical_key ON mentions (project_id, canonical_key) WHERE canonical_key IS NOT NULL`,
+  `CREATE TABLE IF NOT EXISTS collection_runs (
+    id SERIAL PRIMARY KEY, project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    "trigger" TEXT NOT NULL DEFAULT 'manual', status TEXT NOT NULL DEFAULT 'pending',
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
+    raw_count INTEGER NOT NULL DEFAULT 0, accepted_count INTEGER NOT NULL DEFAULT 0,
+    new_count INTEGER NOT NULL DEFAULT 0, duplicate_count INTEGER NOT NULL DEFAULT 0,
+    discarded_count INTEGER NOT NULL DEFAULT 0, error TEXT
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS collection_one_active_per_project ON collection_runs(project_id)
+    WHERE status IN ('pending', 'running')`,
+  `CREATE INDEX IF NOT EXISTS collection_runs_history ON collection_runs(project_id, started_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS collection_run_sources (
+    id SERIAL PRIMARY KEY, run_id INTEGER NOT NULL REFERENCES collection_runs(id) ON DELETE CASCADE,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    source TEXT NOT NULL, origin_url TEXT, query TEXT NOT NULL DEFAULT '',
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
+    status TEXT NOT NULL DEFAULT 'pending', raw_count INTEGER NOT NULL DEFAULT 0,
+    accepted_count INTEGER NOT NULL DEFAULT 0, new_count INTEGER NOT NULL DEFAULT 0,
+    duplicate_count INTEGER NOT NULL DEFAULT 0, discarded_count INTEGER NOT NULL DEFAULT 0,
+    discard_reasons JSONB NOT NULL DEFAULT '{}', http_status INTEGER, error TEXT,
+    duration_ms INTEGER, last_success_at TIMESTAMPTZ
+  )`,
+  `CREATE INDEX IF NOT EXISTS collection_sources_history ON collection_run_sources(project_id, source, finished_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS mention_entities (
+    id SERIAL PRIMARY KEY, project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    mention_id INTEGER NOT NULL REFERENCES mentions(id) ON DELETE CASCADE,
+    entity_id INTEGER NOT NULL REFERENCES benchmark_entities(id) ON DELETE CASCADE,
+    UNIQUE (mention_id, entity_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS mention_entities_project ON mention_entities(project_id, entity_id)`,
+  `CREATE TABLE IF NOT EXISTS mention_discoveries (
+    id SERIAL PRIMARY KEY, run_id INTEGER NOT NULL REFERENCES collection_runs(id) ON DELETE CASCADE,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    mention_id INTEGER NOT NULL REFERENCES mentions(id) ON DELETE CASCADE,
+    source TEXT NOT NULL, external_id TEXT NOT NULL, url TEXT,
+    duplicate INTEGER NOT NULL DEFAULT 0, discovered_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (run_id, source, external_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS mention_discoveries_mention ON mention_discoveries(mention_id, source)`,
 ];
 
 async function ensureSchema(db: DB) {
