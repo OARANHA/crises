@@ -18,6 +18,8 @@ export interface ListeningQuery {
   languages: string[];
   /** Codici paese ISO (IT, US, …): applicato alle fonti che lo supportano (news) */
   countries: string[];
+  /** Feeds deste projeto, sem variável de módulo compartilhada. */
+  rssFeeds?: string[];
   /**
    * Id del progetto Talkwalker da interrogare (solo per i progetti in modalità
    * 'talkwalker'). Le altre fonti lo ignorano.
