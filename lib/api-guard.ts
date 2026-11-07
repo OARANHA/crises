@@ -41,6 +41,9 @@ export async function requireProject(opts: { write?: boolean } = {}): Promise<Gu
   if (opts.write && isDemoMode()) return { response: json403Demo() };
   const user = await getCurrentUser();
   if (!user) return { response: json401() };
+  if (opts.write && user.role === 'client') {
+    return { response: NextResponse.json({ error: 'client_read_only' }, { status: 403 }) };
+  }
   const project = await getCurrentProject();
   if (!project) {
     return {
@@ -67,7 +70,12 @@ export async function requireUser(): Promise<{ user: User } | { response: NextRe
  */
 export async function requireWriteUser(): Promise<{ user: User } | { response: NextResponse }> {
   if (isDemoMode()) return { response: json403Demo() };
-  return requireUser();
+  const access = await requireUser();
+  if ('response' in access) return access;
+  if (access.user.role === 'client') {
+    return { response: NextResponse.json({ error: 'client_read_only' }, { status: 403 }) };
+  }
+  return access;
 }
 
 /** Come requireProject, ma l'operazione è riservata agli amministratori. */
