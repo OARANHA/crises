@@ -2,7 +2,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db';
 import {
   benchmarkEntities, collectionRuns, collectionRunSources, mentionDiscoveries,
-  mentionEntities, mentions, type projects,
+  mentionEntities, mentions, projects,
 } from '@/lib/db/schema';
 import { googleNews } from '@/lib/connectors/googlenews';
 import { gdelt } from '@/lib/connectors/gdelt';
