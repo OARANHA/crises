@@ -6,13 +6,6 @@ import { collect, fetchText, stripHtml, truncate } from './util';
 // (testate, blog, Google Alerts, subreddit, canali YouTube…).
 // Modello watchlist: i feed si configurano per progetto in Gestione progetti.
 
-let watchedFeeds: string[] = [];
-
-/** Impostato dall'ingest prima del fetch, coi feed del progetto corrente. */
-export function setRssFeeds(feeds: string[]) {
-  watchedFeeds = feeds.filter((f) => /^https?:\/\//i.test(f.trim())).map((f) => f.trim());
-}
-
 type RssItem = {
   title?: unknown; link?: unknown; pubDate?: string; description?: unknown;
   'content:encoded'?: unknown; guid?: unknown;
@@ -72,8 +65,9 @@ export const rss: Connector = {
   label: 'Custom RSS feeds',
   tier: 'free',
   enabled: () => true,
-  async fetchMentions() {
-    if (watchedFeeds.length === 0) return [];
-    return collect(watchedFeeds.slice(0, 15).map(fetchFeed));
+  async fetchMentions(q) {
+    const feeds = (q.rssFeeds ?? []).filter((f) => /^https?:\/\//i.test(f.trim()))
+      .map((f) => f.trim()).slice(0, 15);
+    return feeds.length ? collect(feeds.map(fetchFeed)) : [];
   },
 };
