@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { eq, desc } from 'drizzle-orm';
 
+async function main() {
 const tmp = mkdtempSync(join(tmpdir(), 'vigia-live-canary-'));
 process.env.PGLITE_DIR = tmp;
 delete process.env.DATABASE_URL;
@@ -34,6 +35,8 @@ try {
   const articles = await db.select().from(schema.mentions)
     .where(eq(schema.mentions.projectId, project.id))
     .orderBy(desc(schema.mentions.publishedAt)).limit(8);
+  const client = (db as unknown as { $client?: { close: () => Promise<void> } }).$client;
+  if (client?.close) await client.close();
   report = {
     timestamp: new Date().toISOString(), type: 'real_public_source_smoke',
     synthetic: false, projectId: project.id, first, second,
@@ -61,3 +64,6 @@ try {
   console.log(JSON.stringify(report, null, 2));
   rmSync(tmp, { recursive: true, force: true });
 }
+
+}
+main().catch((error) => { console.error(error); process.exitCode = 1; });
