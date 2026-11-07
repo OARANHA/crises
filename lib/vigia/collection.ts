@@ -27,7 +27,7 @@ type SourceJob = { query: string; fetch: () => Promise<RawMention[]> };
 function sourceJobs(source: PilotSource, project: Project): SourceJob[] {
   const base: ListeningQuery = {
     anyTerms: [], allTerms: [], excludeTerms: [], languages: ['pt'], countries: ['BR'],
-    rssFeeds: project.rssFeeds ?? [],
+    rssFeeds: project.rssFeeds ?? [], strict: true,
   };
   if (source === 'rss') {
     // Um feed inexistente ou não validado NÃO é substituído por um URL fictício.
