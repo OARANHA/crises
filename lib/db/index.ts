@@ -449,7 +449,7 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS mentions_canonical_key ON mentions (project_id, canonical_key) WHERE canonical_key IS NOT NULL`,
   `CREATE TABLE IF NOT EXISTS collection_runs (
     id SERIAL PRIMARY KEY, project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    trigger TEXT NOT NULL DEFAULT 'manual', status TEXT NOT NULL DEFAULT 'pending',
+    "trigger" TEXT NOT NULL DEFAULT 'manual', status TEXT NOT NULL DEFAULT 'pending',
     started_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
     raw_count INTEGER NOT NULL DEFAULT 0, accepted_count INTEGER NOT NULL DEFAULT 0,
     new_count INTEGER NOT NULL DEFAULT 0, duplicate_count INTEGER NOT NULL DEFAULT 0,
