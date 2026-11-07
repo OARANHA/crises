@@ -39,6 +39,7 @@ async function fetchFeed(query: string, loc: Locale, lang?: string): Promise<Raw
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${loc.hl}&gl=${loc.gl}&ceid=${loc.ceid}`;
   const xml = await fetchText(url);
   const parsed = new XMLParser({ ignoreAttributes: false }).parse(xml);
+  if (!parsed?.rss?.channel) throw new Error('Google News não retornou um feed RSS válido');
   let items: RssItem[] = parsed?.rss?.channel?.item ?? [];
   if (!Array.isArray(items)) items = [items];
   return items.slice(0, 60).map((it) => {
@@ -80,6 +81,7 @@ export const googleNews: Connector = {
       ? q.countries.filter((c) => BY_COUNTRY[c]).slice(0, 6).map((c) => ({ loc: BY_COUNTRY[c] }))
       : q.languages.filter((l) => BY_LANGUAGE[l]).slice(0, 6).map((l) => ({ loc: BY_LANGUAGE[l], lang: l }));
     if (locales.length === 0) locales.push({ loc: BY_LANGUAGE.en, lang: 'en' });
-    return collect(locales.map(({ loc, lang }) => fetchFeed(query, loc, lang)));
+    const tasks = locales.map(({ loc, lang }) => fetchFeed(query, loc, lang));
+    return q.strict ? (await Promise.all(tasks)).flat() : collect(tasks);
   },
 };
