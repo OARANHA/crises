@@ -1,13 +1,30 @@
 @import "tailwindcss";
 
-:root {
-  --background: #0a0f1f;
-  --foreground: #e2e8f0;
-  --panel: #10172e;
-  --panel-2: #16203c;
-  --border: #1e2a4a;
-  --muted: #7c8cab;
-  --accent: #38bdf8;
+:root, .theme-dark {
+  color-scheme: dark;
+  --background: #090f1c;
+  --foreground: #eaf0fb;
+  --panel: #121c2d;
+  --panel-2: #19263b;
+  --sidebar: #0c1525;
+  --border: #25334a;
+  --muted: #9aaac2;
+  --accent: #68bdf5;
+  --accent-soft: rgba(104,189,245,.12);
+  --panel-shadow: 0 12px 42px rgba(0,0,0,.16);
+}
+.theme-light {
+  color-scheme: light;
+  --background: #f2f6fb;
+  --foreground: #17283f;
+  --panel: #ffffff;
+  --panel-2: #eef3f9;
+  --sidebar: #ffffff;
+  --border: #dce5f0;
+  --muted: #5b6d84;
+  --accent: #0879b2;
+  --accent-soft: rgba(8,121,178,.1);
+  --panel-shadow: 0 12px 38px rgba(39,73,112,.08);
 }
 
 @theme inline {
@@ -18,8 +35,12 @@
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
+  background-image: radial-gradient(ellipse 60% 36% at 78% -4%, var(--accent-soft), transparent 76%);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .2s ease, color .2s ease;
 }
 
 ::selection { background: #38bdf855; }
@@ -27,7 +48,8 @@ body {
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: 1.05rem;
+  box-shadow: var(--panel-shadow);
 }
 
 /* --- War Room --- */
@@ -131,3 +153,68 @@ body {
 .brief-md ul { list-style: disc; padding-left: 1.25rem; margin: 0.4rem 0; }
 .brief-md li { margin: 0.25rem 0; line-height: 1.5; }
 .brief-md strong { color: #f1f5f9; }
+
+/* VigiaElus global design system v1 */
+.app-shell { min-height: 100vh; isolation: isolate; }
+.app-sidebar {
+  background: var(--sidebar);
+  border-color: var(--border);
+  box-shadow: 1px 0 0 rgba(128,155,194,.04);
+  transition: width .2s ease;
+}
+.app-workspace { min-width: 0; }
+.app-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  min-height: 70px; padding: .85rem 1.6rem;
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+.app-content { width: 100%; max-width: 1560px; margin-inline: auto; padding: 1.5rem; }
+.app-nav-link {
+  border: 1px solid transparent;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.app-nav-link[data-active="true"] {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.app-nav-link[data-active="false"]:hover { background: var(--accent-soft); color: var(--foreground); }
+.app-surface { background: var(--panel); border: 1px solid var(--border); border-radius: 1rem; }
+.app-muted { color: var(--muted); }
+.app-field {
+  background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--foreground); border-radius: .7rem; min-height: 40px;
+}
+.app-field:focus-visible, .app-nav-link:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.app-metric {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 1.05rem;
+  padding: 1.15rem 1.35rem;
+  box-shadow: var(--panel-shadow);
+}
+.app-metric-value { font-size: clamp(1.4rem,2.4vw,2rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.15; }
+.vigia-hero {
+  background: linear-gradient(112deg, var(--panel) 38%, color-mix(in srgb, var(--panel) 81%, var(--accent)) 100%);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+}
+.theme-light .text-white, .theme-light .text-slate-100, .theme-light .text-slate-200 { color: var(--foreground); }
+.theme-light .text-slate-300 { color: #31445f; }
+.theme-light .text-slate-400, .theme-light .text-slate-500 { color: #566982; }
+.theme-light .text-slate-600 { color: #62738a; }
+.theme-light .text-sky-300, .theme-light .text-sky-400 { color: #075f96; }
+.theme-light .border-slate-700 { border-color: var(--border); }
+.theme-light .bg-slate-900 { background: var(--panel-2); }
+.theme-light .bg-slate-700 { background: #d7e3ef; }
+@media(max-width: 639px) {
+  .app-toolbar { padding: .75rem 1rem; min-height: 56px; }
+  .app-content { padding: 1rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .app-sidebar, .app-nav-link, body { transition: none; }
+  .tv-slide, .tv-stagger > *, .tv-3d > *, .tv-float, .tv-shine::after, .tv-blip, .tv-ticker-x, .tv-ticker-y, .tv-aurora, .tl-item { animation: none !important; }
+}

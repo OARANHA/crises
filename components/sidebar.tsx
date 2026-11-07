@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Settings, Menu, X, UserCog, LogOut, UserCircle2 } from 'lucide-react';
+import { Settings, Menu, X, UserCog, LogOut, UserCircle2, PanelLeftOpen, PanelLeftClose, Sun, Moon } from 'lucide-react';
 import { RefreshButton } from './refresh-button';
-import { Brand } from './brand';
+import { Brand, BrandMark } from './brand';
 import { LocaleSwitch } from './locale-switch';
 import { tFor, localeTag, type Locale } from '@/lib/i18n-dict';
 import { NAV, type NavItem } from '@/lib/nav';
@@ -37,11 +37,13 @@ type Props = {
   peopleCount?: number;
   user?: { name: string; role: string } | null;
   locale?: Locale;
+  theme?: 'light' | 'dark';
 };
 
-export function Sidebar({ projects, currentId, lastIngest, alertCount = 0, peopleCount = 0, user = null, locale = 'en' }: Props) {
+export function Sidebar({ projects, currentId, lastIngest, alertCount = 0, peopleCount = 0, user = null, locale = 'en', theme = 'dark' }: Props) {
   const t = tFor(locale);
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -82,7 +84,7 @@ export function Sidebar({ projects, currentId, lastIngest, alertCount = 0, peopl
       <CommandPalette locale={locale} />
 
       {/* Header mobile/tablet (sotto lg) */}
-      <header className="sticky top-0 z-40 flex flex-wrap items-center gap-3 border-b border-[var(--border)] bg-[#0c1226]/95 px-4 py-2.5 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-40 flex flex-wrap items-center gap-3 border-b border-[var(--border)] bg-[var(--sidebar)]/95 px-4 py-2.5 backdrop-blur lg:hidden">
         <button onClick={() => setOpen(true)} aria-label="Open menu"
           className="rounded-lg p-1.5 text-slate-300 hover:bg-white/10">
           <Menu className="size-5" />
@@ -98,7 +100,7 @@ export function Sidebar({ projects, currentId, lastIngest, alertCount = 0, peopl
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col gap-4 overflow-y-auto bg-[#0c1226] px-3 py-4 shadow-2xl">
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col gap-4 overflow-y-auto bg-[var(--sidebar)] px-3 py-4 shadow-2xl">
             <div className="flex items-center gap-2 px-2">
               <Brand />
               <button onClick={() => setOpen(false)} aria-label="Close menu"
@@ -109,22 +111,33 @@ export function Sidebar({ projects, currentId, lastIngest, alertCount = 0, peopl
             <CommandHint locale={locale} />
             <NavLinks pathname={pathname} alertCount={alertCount} peopleCount={peopleCount} t={t} onNavigate={() => setOpen(false)} />
             {userBlock}
+            <div className="px-2"><ThemeButton initialTheme={theme} /></div>
             <FooterBlock lastIngest={lastIngest} locale={locale} />
           </div>
         </div>
       )}
 
-      {/* Sidebar desktop (da lg in su) */}
-      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-3 border-r border-[var(--border)] bg-[#0c1226] px-3 py-5 lg:flex">
-        <div className="px-2 [&_span_span_span:last-child]:block">
-          <Brand />
+      {/* Sidebar responsiva: rail compacto por padrão, menu completo acessível ao expandir. */}
+      <aside className={`app-sidebar sticky top-0 hidden h-screen shrink-0 flex-col gap-3 border-r px-2 py-5 lg:flex ${collapsed ? 'w-[76px]' : 'w-[254px]'}`}>
+        <div className={`flex items-center gap-2 ${collapsed ? 'flex-col' : 'justify-between px-2'}`}>
+          {collapsed ? <BrandMark className="size-7 text-[var(--foreground)]" /> : <Brand />}
+          <button type="button" onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            aria-label={collapsed ? 'Expandir navegação' : 'Recolher navegação'}
+            aria-expanded={!collapsed}
+            className="rounded-lg p-2 text-[var(--muted)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]">
+            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </button>
         </div>
-        <ProjectSelect projects={projects} currentId={currentId} />
-        <CommandHint locale={locale} />
-        <NavLinks pathname={pathname} alertCount={alertCount} peopleCount={peopleCount} t={t} />
-        <div className="mt-auto flex flex-col gap-3">
-          {userBlock}
-          <FooterBlock lastIngest={lastIngest} locale={locale} />
+        {!collapsed && <ProjectSelect projects={projects} currentId={currentId} />}
+        {!collapsed && <CommandHint locale={locale} />}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <NavLinks pathname={pathname} alertCount={alertCount} peopleCount={peopleCount} t={t} compact={collapsed} />
+        </div>
+        <div className={`mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-3 ${collapsed ? 'items-center' : 'px-1'}`}>
+          <ThemeButton initialTheme={theme} compact={collapsed} />
+          {!collapsed && userBlock}
+          {!collapsed && <FooterBlock lastIngest={lastIngest} locale={locale} />}
         </div>
       </aside>
     </>
@@ -163,14 +176,15 @@ function ProjectSelect({ projects, currentId, compact }: {
  * restano al loro posto, più piccole e in grigio. Non si nasconde niente e non
  * serve un clic in più: cambia solo quanto pesano sull'occhio.
  */
-function NavLinks({ pathname, alertCount = 0, peopleCount = 0, t, onNavigate }: {
+function NavLinks({ pathname, alertCount = 0, peopleCount = 0, t, onNavigate, compact = false }: {
   pathname: string; alertCount?: number; peopleCount?: number;
-  t: (k: string, f: string) => string; onNavigate?: () => void;
+  t: (k: string, f: string) => string; onNavigate?: () => void; compact?: boolean;
 }) {
   return (
-    <nav className="flex flex-col gap-px overflow-y-auto">
+    <nav aria-label="Menu principal" className={`flex flex-col ${compact ? 'items-center gap-1' : 'gap-px'}`}>
       {NAV.map((item, i) => {
         if ('section' in item) {
+          if (compact) return item.section ? <hr key={i} className="my-1 w-7 border-[var(--border)]" /> : null;
           return item.section
             ? <p key={i} className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{t(item.key, item.section)}</p>
             : <hr key={i} className="my-2 border-[var(--border)]" />;
@@ -194,8 +208,11 @@ function NavLinks({ pathname, alertCount = 0, peopleCount = 0, t, onNavigate }: 
             key={href}
             href={href}
             onClick={onNavigate}
-            className={`flex items-center gap-2.5 rounded-lg transition-colors ${
-              primary ? 'px-3 py-1.5 text-[15px]' : 'py-1 pl-3 pr-3 text-[13px]'
+            title={compact ? t(key, label) : undefined}
+            aria-label={compact ? t(key, label) : undefined}
+            data-active={active}
+            className={`app-nav-link flex items-center gap-2.5 rounded-xl transition-colors ${compact ? 'size-10 justify-center' : ''} ${
+              compact ? 'p-0' : primary ? 'px-3 py-1.5 text-[15px]' : 'py-1 pl-3 pr-3 text-[13px]'
             } ${
               active
                 ? 'bg-sky-500/15 font-medium text-sky-300'
@@ -204,22 +221,22 @@ function NavLinks({ pathname, alertCount = 0, peopleCount = 0, t, onNavigate }: 
                   : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
             }`}
           >
-            {primary || accent
+            {compact || primary || accent
               ? <Icon className={`size-4 shrink-0 ${!active && accent ? ACCENT[accent] : ''}`} />
               // Le voci di tutti i giorni portano l'icona; le altre no. Con
               // venti icone tutte accese nessuna aiuta più a distinguere.
               : <span className="ml-[3px] mr-[7px] size-[3px] shrink-0 rounded-full bg-current opacity-40" />}
-            <span className="truncate">{t(key, label)}</span>
+            <span className={compact ? "sr-only" : "truncate"}>{t(key, label)}</span>
             {/* Le persone stanno dentro questa voce come scheda: senza il
                 numero, un progetto che ne contiene quindici sembra non averne
                 nessuna — e la pagina non la cerca più nessuno. */}
-            {href === '/measures' && peopleCount > 0 && (
+            {!compact && href === '/measures' && peopleCount > 0 && (
               <span title={`${peopleCount} persone in questo progetto`}
                 className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-white/10 px-1.5 text-[11px] font-semibold text-slate-300">
                 {peopleCount}
               </span>
             )}
-            {href === '/alerts' && alertCount > 0 && (
+            {!compact && href === '/alerts' && alertCount > 0 && (
               <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500/90 px-1.5 text-[11px] font-bold text-white">
                 {alertCount > 9 ? '9+' : alertCount}
               </span>
@@ -242,5 +259,27 @@ function FooterBlock({ lastIngest, locale = 'en' }: { lastIngest: string | null;
           : t('ui.noDataYet', 'No data collected yet')}
       </p>
     </div>
+  );
+}
+
+/** SSR and client share the same cookie. No theme mutation before hydration. */
+function ThemeButton({ initialTheme, compact = false }: { initialTheme: 'light' | 'dark'; compact?: boolean }) {
+  const [theme, setTheme] = useState(initialTheme);
+  const isDark = theme === 'dark';
+  function toggle() {
+    const next = isDark ? 'light' : 'dark';
+    document.cookie = `vigia_theme=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    document.documentElement.classList.toggle('theme-dark', next === 'dark');
+    document.documentElement.classList.toggle('theme-light', next === 'light');
+    setTheme(next);
+  }
+  return (
+    <button type="button" onClick={toggle}
+      title={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
+      aria-label={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
+      className={`flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] text-[var(--foreground)] transition hover:bg-[var(--accent-soft)] ${compact ? 'size-10' : 'w-full px-3 py-2 text-xs'}`}>
+      {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />}
+      {!compact && <span>{isDark ? 'Modo escuro' : 'Modo claro'}</span>}
+    </button>
   );
 }

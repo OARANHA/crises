@@ -94,36 +94,70 @@ export default async function VigiaPage({ searchParams }: {
   }
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 p-5 sm:p-8">
-      <div className="space-y-2">
-        <p className="text-xs uppercase tracking-widest text-sky-400">VigiaElus · Piloto de monitoramento</p>
-        <h1 className="text-2xl font-semibold text-white">{project.name}</h1>
-        <p className="text-sm text-slate-400">Rio Grande do Sul · Português brasileiro · Projeto #{project.id}</p>
-      </div>
+    <div className="space-y-6 pb-10">
+      <header className="vigia-hero relative overflow-hidden p-6 sm:p-8">
+        <div className="pointer-events-none absolute -right-14 -top-20 size-64 rounded-full bg-sky-400/10 blur-3xl" aria-hidden="true" />
+        <div className="relative flex flex-wrap items-start justify-between gap-5">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[.22em] text-[var(--accent)]">VIGIAELUS / REPUTAÇÃO E COMUNICAÇÃO</p>
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">{project.name}</h1>
+            <p className="text-sm leading-relaxed text-[var(--muted)]">Acompanhamento de menções públicas verificadas, fontes monitoradas e histórico auditável das coletas do CRF-RS.</p>
+            <p className="text-xs text-[var(--muted)]">Rio Grande do Sul · Português brasileiro · Projeto #{project.id}</p>
+          </div>
+          <div className="app-surface min-w-40 px-4 py-3 text-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">Última coleta</p>
+            <p className="mt-1 font-semibold text-[var(--foreground)]">{latest ? latest.status : 'Não executada'}</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">{latest ? formatDate(latest.startedAt) : 'Aguardando primeira execução'}</p>
+          </div>
+        </div>
+      </header>
 
-      <section className="panel space-y-3 p-5">
-        <h2 className="text-lg font-semibold text-white">Coleta manual</h2>
-        <VigiaControls projectId={project.id} canWrite={canWrite} />
-        <p className="text-xs text-slate-400">Somente fontes habilitadas neste projeto.
-          Sem análise automática por IA, notificações ou descarte de dados.</p>
+      <section aria-label="Indicadores da coleta" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Menções novas', value: latest ? n(latest.newCount) : '—', detail: 'Última execução registrada' },
+          { label: 'Duplicatas', value: latest ? n(latest.duplicateCount) : '—', detail: 'Ocorrências reconhecidas' },
+          { label: 'Itens descartados', value: latest ? n(latest.discardedCount) : '—', detail: 'Motivos no histórico por fonte' },
+          { label: 'Fontes habilitadas', value: n(SUPPORTED_SOURCES.filter((s) => project.enabledSources.includes(s)).length), detail: 'Configuração deste projeto' },
+        ].map((metric) => (
+          <div key={metric.label} className="app-metric">
+            <p className="text-xs font-medium text-[var(--muted)]">{metric.label}</p>
+            <p className="app-metric-value mt-2 text-[var(--foreground)]">{metric.value}</p>
+            <p className="mt-2 text-[11px] text-[var(--muted)]">{metric.detail}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="panel flex flex-wrap items-center justify-between gap-5 p-5 sm:p-6">
+        <div className="min-w-0 space-y-1">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Coleta sob demanda</h2>
+          <p className="text-xs text-[var(--muted)]">Sem execução automática, IA ou notificações nesta etapa.</p>
+        </div>
+        <div className="space-y-2">
+          <VigiaControls projectId={project.id} canWrite={canWrite} />
+          <p className="text-[11px] text-[var(--muted)]">Apenas fontes habilitadas · sem descarte automático.</p>
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         {PILOT_ENTITIES.map((def) => (
-          <div key={def.key} className="panel p-4">
-            <h2 className="font-semibold text-white">{def.name}</h2>
+          <div key={def.key} className="panel group p-5 transition-colors hover:border-sky-400/40">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[.16em] text-[var(--accent)]">Entidade monitorada</p>
+            <h2 className="font-semibold text-[var(--foreground)]">{def.name}</h2>
             <p className="mt-2 text-xs text-slate-400">{def.key === 'giovana'
               ? 'Reputação pública e gestão da presidência'
               : def.key === 'funcionarios' ? 'Manifestações públicas documentadas'
               : 'Gestão, serviços e repercussão institucional'}</p>
             <a href={qs({ entidade: def.key, fonte: sourceFilter, dias: String(days) })}
-              className="mt-3 inline-block text-sm text-sky-300 underline">Filtrar menções</a>
+              className="mt-4 inline-flex text-sm font-medium text-[var(--accent)] hover:underline">Explorar menções ↗</a>
           </div>
         ))}
       </section>
 
-      <section className="panel space-y-4 p-5">
-        <h2 className="text-lg font-semibold">Fontes e última execução</h2>
+      <section className="panel space-y-4 p-5 sm:p-6">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">Monitoramento</p>
+          <h2 className="text-lg font-semibold">Fontes e última execução</h2>
+        </div>
         <p className="text-sm text-slate-400">{latest
           ? 'Execução #' + latest.id + ' · ' + latest.status + ' · ' + formatDate(latest.startedAt)
           : 'Nenhuma execução registrada.'}</p>
@@ -137,7 +171,7 @@ export default async function VigiaPage({ searchParams }: {
           {SUPPORTED_SOURCES.map((source) => {
             const enabled = project.enabledSources.includes(source);
             const state = sourceStates.find((row) => row.source === source);
-            return <div key={source} className="rounded-lg border border-slate-700 p-3">
+            return <div key={source} className="app-surface space-y-2 p-4">
               <div className="flex items-center justify-between gap-3">
                 <strong>{sourceName[source]}</strong>
                 <span className="text-xs text-slate-400">{enabled ? 'Habilitada' : 'Desabilitada'}</span>
@@ -162,32 +196,38 @@ export default async function VigiaPage({ searchParams }: {
         </div>
       </section>
 
-      <section className="panel space-y-4 p-5">
-        <h2 className="text-lg font-semibold">Menções verificadas</h2>
+      <section className="panel space-y-4 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">Evidências</p>
+            <h2 className="text-lg font-semibold">Menções verificadas</h2>
+          </div>
+          <span className="rounded-full border border-[var(--border)] bg-[var(--panel-2)] px-3 py-1 text-xs text-[var(--muted)]">{n(articles.length)} registros</span>
+        </div>
         <form method="GET" className="flex flex-wrap items-end gap-3 text-sm">
           <label className="space-y-1">Entidade
-            <select name="entidade" defaultValue={entityFilter ?? ''} className="block rounded bg-slate-900 p-2">
+            <select name="entidade" defaultValue={entityFilter ?? ''} className="app-field mt-1 block w-full p-2">
               <option value="">Todas</option>
               {PILOT_ENTITIES.map((e) => <option key={e.key} value={e.key}>{e.name}</option>)}
             </select>
           </label>
           <label className="space-y-1">Fonte
-            <select name="fonte" defaultValue={sourceFilter ?? ''} className="block rounded bg-slate-900 p-2">
+            <select name="fonte" defaultValue={sourceFilter ?? ''} className="app-field mt-1 block w-full p-2">
               <option value="">Todas</option>
               {SUPPORTED_SOURCES.map((s) => <option key={s} value={s}>{sourceName[s]}</option>)}
             </select>
           </label>
           <label className="space-y-1">Período
-            <select name="dias" defaultValue={String(days)} className="block rounded bg-slate-900 p-2">
+            <select name="dias" defaultValue={String(days)} className="app-field mt-1 block w-full p-2">
               {[1, 7, 30, 90].map((d) => <option key={d} value={d}>{d} dia(s)</option>)}
             </select>
           </label>
-          <button className="rounded bg-slate-700 px-4 py-2">Filtrar</button>
+          <button className="rounded-xl border border-[var(--border)] bg-[var(--accent-soft)] px-4 py-2.5 font-medium text-[var(--foreground)] hover:border-[var(--accent)]">Aplicar filtros</button>
         </form>
         <p className="text-xs text-slate-400">{n(articles.length)} registros nesta página (máx. 80). Sentimento e relevância apenas quando analisados.</p>
-        {articles.length ? <ul className="divide-y divide-slate-700">
+        {articles.length ? <ul className="divide-y divide-[var(--border)]">
           {articles.map((article) => (
-            <li key={article.id} className="space-y-1 py-4">
+            <li key={article.id} className="space-y-2 py-4">
               <a href={canonicalArticleUrl(article.url ?? undefined) ?? '#'}
                 target="_blank" rel="noopener noreferrer" className="font-medium text-sky-300 underline">
                 {article.title || 'Sem título'}
@@ -202,8 +242,11 @@ export default async function VigiaPage({ searchParams }: {
         </ul> : <p className="text-sm text-slate-400">Nenhuma menção para os filtros selecionados.</p>}
       </section>
 
-      <section className="panel space-y-3 p-5">
-        <h2 className="text-lg font-semibold">Histórico de execuções</h2>
+      <section className="panel space-y-3 p-5 sm:p-6">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">Auditoria</p>
+          <h2 className="text-lg font-semibold">Histórico de execuções</h2>
+        </div>
         {history.length ? <ul className="divide-y divide-slate-700">
           {history.map((run) => <li key={run.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
             <a className="text-sky-300 underline" href={qs({
@@ -218,6 +261,6 @@ export default async function VigiaPage({ searchParams }: {
           {history.length === 20 && <a className="text-sky-300 underline" href={qs({ historico: String(page + 1), entidade: entityFilter, fonte: sourceFilter, dias: String(days) })}>Mais antigas</a>}
         </div>
       </section>
-    </main>
+    </div>
   );
 }
