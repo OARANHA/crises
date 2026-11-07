@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'incorrect email or password' }, { status: 401 });
   }
 
-  const res = NextResponse.json({ ok: true, mustChangePassword: user.mustChangePassword === 1 });
+  const res = NextResponse.json({ ok: true, mustChangePassword: user.mustChangePassword === 1, redirectTo: user.role === 'client' ? '/cliente' : '/' });
   res.cookies.set(SESSION_COOKIE, signSession(user.id, user.sessionVersion ?? 0), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

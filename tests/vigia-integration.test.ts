@@ -48,9 +48,7 @@ after(async () => {
   if (google) google.googleNews.fetchMentions = originalGoogle;
   if (gdelt) gdelt.gdelt.fetchMentions = originalGdelt;
   const db = await dbMod.getDb();
-  const client = (db as unknown as { $client?: { close: () => Promise<void> } }).$client;
-  assert.ok(client, 'PGlite deve expor cliente para reabertura da base de teste');
-  await client.close();
+  await (db as unknown as { $client: { close(): Promise<void> } }).$client.close();
   // Abrir a mesma base PGlite após fechar a conexão prova que o histórico está no disco.
   const { PGlite } = await import('@electric-sql/pglite');
   const reopened = new PGlite(dir);

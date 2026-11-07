@@ -5,15 +5,17 @@ permissions:
 
 on:
   push:
-    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2, feat/vigiaelus-global-ui]
+    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2, feat/vigiaelus-client-portal-scan-v8]
   pull_request:
-    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2]
+    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-global-ui]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -22,6 +24,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Documentation drift guard
+        run: node scripts/check-docs-drift.mjs
 
       - name: Lint
         run: npm run lint
@@ -39,14 +44,6 @@ jobs:
         run: |
           node scripts/e2e-security.mjs
           node scripts/e2e-server-actions.mjs
-        env:
-          RADAR_E2E_EVIDENCE_DIR: ${{ runner.temp }}/radar-e2e-evidence
-
-      - name: VigiaElus real public-source canary (isolated DB, diagnostics)
-        if: github.ref == 'refs/heads/feat/vigiaelus-crfrs-etapas-1-2' || github.event_name == 'pull_request'
-        continue-on-error: true
-        timeout-minutes: 5
-        run: node --import tsx scripts/vigia-live-smoke.ts
         env:
           RADAR_E2E_EVIDENCE_DIR: ${{ runner.temp }}/radar-e2e-evidence
 

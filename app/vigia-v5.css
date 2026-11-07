@@ -1,0 +1,414 @@
+/* VigiaElus V5 — direção visual aprovada (2026-11-07).
+   Camada visual aditiva: preserva a estrutura, as funções e os temas anteriores. */
+:root {
+  --background: #f7f7fc;
+  --foreground: #22263a;
+  --panel: #fff;
+  --panel-2: #f7f8fc;
+  --border: #e9eaf2;
+  --muted: #59647b;
+  --accent: #7056d8;
+  --sidebar: #fff;
+  --soft-purple: #e9e2ff;
+  --soft-green: #def6e7;
+  --soft-rose: #ffe3e9;
+  --soft-orange: #fff0dd;
+  --shadow-card: 0 13px 34px rgba(52, 43, 98, .07), 0 2px 7px rgba(52, 43, 98, .025);
+}
+:root[data-theme="dark"] {
+  --background: #121420;
+  --foreground: #f4f2fb;
+  --panel: #1c2030;
+  --panel-2: #252a3c;
+  --border: #34364d;
+  --muted: #bac2d5;
+  --accent: #c4afff;
+  --sidebar: #11131e;
+  --soft-purple: #373050;
+  --soft-green: #204d3f;
+  --soft-rose: #542c43;
+  --soft-orange: #503c32;
+  --shadow-card: 0 16px 35px rgba(0,0,0,.16);
+}
+body {
+  background-color: var(--background);
+  background-image: radial-gradient(ellipse 32% 32% at 0% 95%, rgba(154,139,255,.10),transparent 86%),
+                    radial-gradient(ellipse 34% 30% at 100% 100%,rgba(249,154,190,.085),transparent 86%);
+}
+.vigia-layout { background:transparent; }
+.vigia-rail { background:var(--sidebar); border-color:var(--border); box-shadow: 3px 0 21px rgba(31,35,71,.018); }
+.vigia-rail-mark {
+  background: #222435;
+  color:#fff;
+  border-radius:13px;
+  box-shadow:0 4px 12px rgba(31,32,52,.13);
+}
+:root[data-theme="dark"] .vigia-rail-mark { background:#28233f; color:#e6dafa; }
+.vigia-rail-links { margin-top:31px; gap:9px; }
+.vigia-rail-link { border-radius:13px; }
+.vigia-rail-link.is-active {
+  background:#e7deff; color:#684adb;
+}
+:root[data-theme="dark"] .vigia-rail-link.is-active { background:#4a3d74;color:#e3d7ff; }
+.vigia-topbar {
+  min-height:76px;
+  background:color-mix(in srgb,var(--background) 94%,white 6%);
+  border-bottom-color:var(--border);
+}
+.vigia-topnav-link { border-radius:999px;padding-inline:18px; }
+.vigia-topnav-link.is-active {
+  color:#fff;
+  background:#252838;
+  box-shadow:0 7px 14px rgba(29,32,55,.12);
+}
+:root[data-theme="dark"] .vigia-topnav-link.is-active {
+  background:#4a3d72;color:#fff;
+}
+.vigia-page-title { font-size:32px; font-weight:760; letter-spacing:-.035em; }
+.vigia-page-subtitle { color:var(--muted);font-size:13px; }
+.vigia-content { padding-top:28px; }
+.vigia-metric-card {
+  isolation:isolate;
+  min-height:150px;
+  gap:9px;
+  padding:20px 21px;
+  border:1px solid rgba(255,255,255,.92);
+  border-radius:17px;
+  box-shadow:var(--shadow-card);
+}
+.vigia-metric-card[data-tone="violet"] {
+  background:linear-gradient(134deg,#fff 0%,#fbfaff 46%,#e8defe 100%);
+}
+.vigia-metric-card[data-tone="mint"] {
+  background:linear-gradient(134deg,#fff 0%,#f8fefb 48%,#d7f6e4 100%);
+}
+.vigia-metric-card[data-tone="blush"] {
+  background:linear-gradient(134deg,#fff 0%,#fff9fb 48%,#f8dce6 100%);
+}
+.vigia-metric-card[data-tone="peach"] {
+  background:linear-gradient(134deg,#fff 0%,#fffbf6 49%,#fbe7d9 100%);
+}
+:root[data-theme="dark"] .vigia-metric-card {
+  border-color:rgba(217,204,255,.17);
+}
+:root[data-theme="dark"] .vigia-metric-card[data-tone="violet"] {
+  background:linear-gradient(135deg,#29243e,#3b315d);
+}
+:root[data-theme="dark"] .vigia-metric-card[data-tone="mint"] {
+  background:linear-gradient(135deg,#192d2b,#23443e);
+}
+:root[data-theme="dark"] .vigia-metric-card[data-tone="blush"] {
+  background:linear-gradient(135deg,#312735,#4a2c44);
+}
+:root[data-theme="dark"] .vigia-metric-card[data-tone="peach"] {
+  background:linear-gradient(135deg,#322b29,#4d392f);
+}
+.vigia-metric-label { font-size:13px;color:var(--foreground);font-weight:650; }
+.vigia-metric-value { font-size:30px;font-weight:775; }
+.vigia-metric-icon { width:37px;height:37px;border-radius:12px; }
+.vigia-card {
+  border:1px solid rgba(255,255,255,.85);
+  border-radius:18px;
+  box-shadow:var(--shadow-card);
+}
+:root[data-theme="dark"] .vigia-card { border-color:var(--border); }
+.vigia-section-title { font-size:16px;font-weight:740;letter-spacing:-.015em; }
+.vigia-section-note { font-size:12px; }
+.vigia-card-header { margin-bottom:17px; }
+.vigia-section-symbol { background:var(--soft-purple); color:var(--accent); }
+.vigia-dashboard-columns {
+  display:grid;grid-template-columns:minmax(0,1.68fr) minmax(280px,1fr);gap:20px;align-items:start;
+}
+.vigia-monitor-board { min-height:288px; }
+.vigia-monitor-scroll {
+  width:100%;overflow-x:auto;outline-offset:3px;scrollbar-color:var(--border) transparent;
+}
+.vigia-heatmap {
+  display:grid;
+  grid-template-columns:minmax(145px,1.5fr) repeat(14,minmax(25px,1fr));
+  gap:8px 5px;align-items:center;min-width:590px;
+}
+.vigia-heatmap-row { display:contents; }
+.vigia-heatmap-caption,.vigia-heatmap-day {
+  color:var(--muted);font-size:10px;font-weight:600;
+}
+.vigia-heatmap-day { text-align:center;font-variant-numeric:tabular-nums; }
+.vigia-heatmap-source {
+  min-width:0;display:flex;align-items:center;gap:7px;
+  font-size:11px;font-weight:650;color:var(--foreground);
+}
+.vigia-heatmap-source small {
+  margin-left:auto;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;
+}
+.vigia-heatmap-bullet { flex:0 0 auto;width:19px;height:19px;border-radius:8px;background:#9476e5; }
+.vigia-heatmap-bullet[data-tone="1"] { background:#43a97a; }
+.vigia-heatmap-bullet[data-tone="2"] { background:#ea7798; }
+.vigia-heatmap-bullet[data-tone="3"] { background:#e8a34c; }
+.vigia-heat-cell {
+  height:26px;border-radius:7px;background:#eef0f5;
+  border:1px solid rgba(121,123,150,.04);
+}
+.vigia-heat-cell.is-filled { background:#9172de; }
+.vigia-heat-cell.is-filled[data-tone="1"] { background:#43b67d; }
+.vigia-heat-cell.is-filled[data-tone="2"] { background:#e9789c; }
+.vigia-heat-cell.is-filled[data-tone="3"] { background:#e8a44f; }
+:root[data-theme="dark"] .vigia-heat-cell { background:#34394b; }
+:root[data-theme="dark"] .vigia-heat-cell.is-filled { background:#b6a0fc; }
+:root[data-theme="dark"] .vigia-heat-cell.is-filled[data-tone="1"] { background:#54ca94; }
+:root[data-theme="dark"] .vigia-heat-cell.is-filled[data-tone="2"] { background:#f185a8; }
+:root[data-theme="dark"] .vigia-heat-cell.is-filled[data-tone="3"] { background:#f7b967; }
+.vigia-monitor-footer {
+  margin-top:18px;padding-top:12px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  color:var(--muted);font-size:10px;
+}
+.vigia-subtle-link {
+  display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-size:11px;font-weight:700;
+}
+.vigia-subtle-link:hover { text-decoration:underline; }
+.vigia-heatmap-empty {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  min-height:170px;text-align:center;color:var(--muted);font-size:12px;
+}
+.vigia-source-health {
+  padding:10px 16px;border-radius:13px;background:var(--soft-green);
+}
+.vigia-source-health > div {
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--foreground) 9%,transparent);
+  color:var(--foreground);font-size:11px;
+}
+.vigia-source-health > div:last-child { border-bottom:0; }
+.vigia-source-health strong {font-size:13px;font-weight:740;font-variant-numeric:tabular-nums;}
+.vigia-next-actions { display:flex;flex-direction:column;border-radius:13px;background:var(--soft-rose);padding:7px 14px; }
+.vigia-next-actions a {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 2px;font-size:11px;color:var(--foreground);
+}
+.vigia-next-actions a+a { border-top:1px solid color-mix(in srgb,var(--foreground) 9%,transparent); }
+.vigia-next-actions a:hover { color:var(--accent); }
+.vigia-card-action {
+  display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
+  border-radius:50%;border:1px solid var(--border);color:var(--muted);
+}
+.vigia-card-action:hover { color:var(--accent);background:var(--panel-2); }
+.vigia-cta {border-radius:999px;background:#252838;}
+.vigia-cta:hover {background:#3a3a53;}
+:root[data-theme="dark"] .vigia-cta {background:#b9a6fc;color:#23243a;}
+:root[data-theme="dark"] .vigia-cta:hover {background:#cdbfff;}
+.vigia-secondary-btn {border-radius:999px;background:var(--panel);}
+.vigia-icon-button {border-radius:50%;}
+.vigia-workspace ::selection {background:var(--soft-purple);color:var(--foreground);}
+@media(max-width:1270px) { .vigia-dashboard-columns{grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr);} }
+@media(max-width:1023px) { .vigia-dashboard-columns{grid-template-columns:1fr;} }
+@media(max-width:639px) {
+  .vigia-page-title {font-size:25px;}
+  .vigia-metric-card {min-height:132px;}
+  .vigia-monitor-board {min-height:0;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .vigia-rail-link,.vigia-icon-button,.vigia-cta,.vigia-topnav-link {transition:none!important;}
+}
+
+
+/* VigiaElus | Projetos V6 â€” layout aprovado, 2026-11-07 */
+.vigia-settings-page {
+  width:100%;
+  max-width:1450px;
+  margin-inline:auto;
+  padding:4px 0 44px;
+  color:var(--foreground);
+}
+.vigia-project-heading {
+  display:flex;align-items:center;gap:15px;
+  margin:0 0 22px;
+}
+.vigia-project-page-icon {
+  display:flex;align-items:center;justify-content:center;
+  flex:0 0 42px;width:42px;height:42px;
+  color:var(--accent);background:var(--soft-purple);border-radius:13px;
+}
+.vigia-project-heading > :last-child {min-width:0}
+.vigia-project-heading h1 {font-size:29px;letter-spacing:-.028em;line-height:1.18}
+.vigia-project-heading p {color:var(--muted);font-size:13px;line-height:1.6}
+.vigia-project-tabs {
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;
+  margin:0 0 20px;padding:0;border:0;
+}
+.vigia-project-tab {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:42px;padding:10px 19px;border-radius:13px;
+  border:1px solid var(--border);background:var(--panel-2);
+  color:var(--foreground);font-size:12px;font-weight:620;text-decoration:none;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.vigia-project-tab:hover {border-color:var(--accent);background:var(--soft-purple)}
+.vigia-project-tab.is-active {
+  background:var(--soft-purple);
+  color:var(--accent);
+  border-color:color-mix(in srgb,var(--accent) 68%,var(--border));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+.vigia-project-tab:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
+.vigia-project-shell {width:100%;margin:0}
+.vigia-project-panel {
+  width:100%;
+  background:var(--panel);
+  padding:28px 29px 18px;
+  border:1px solid color-mix(in srgb,var(--accent) 36%,var(--border));
+  border-radius:19px;
+  box-shadow:0 16px 48px rgba(35,31,76,.06),0 2px 9px rgba(35,31,76,.025);
+}
+:root[data-theme="dark"] .vigia-project-panel {
+  background:linear-gradient(135deg,#1e2235 0%,#1a1e30 100%);
+  border-color:#5e4f87;
+  box-shadow:0 19px 46px rgba(0,0,0,.17);
+}
+.vigia-project-panel-heading {
+  display:flex;align-items:center;gap:15px;
+  padding:0 0 24px;
+}
+.vigia-project-panel-icon {
+  display:flex;align-items:center;justify-content:center;
+  flex:0 0 46px;width:46px;height:46px;border-radius:13px;
+  background:var(--soft-purple);color:var(--accent);
+}
+.vigia-project-panel-heading h2 {font-size:19px;font-weight:750;letter-spacing:-.025em;line-height:1.3}
+.vigia-project-panel-heading p {margin-top:4px;color:var(--muted);font-size:12px;line-height:1.5}
+.vigia-settings-row {
+  display:grid;grid-template-columns:minmax(170px,220px) minmax(0,1fr);
+  gap:24px;padding:22px 0;border-top:1px solid var(--border);
+}
+.vigia-settings-row-label {
+  display:flex;gap:12px;align-items:flex-start;min-width:0;padding:5px 0;
+}
+.vigia-settings-label-icon {
+  flex:0 0 27px;display:flex;align-items:center;justify-content:center;
+  color:var(--accent);width:27px;height:27px;
+}
+.vigia-settings-row-label h3 {
+  margin:0;font-size:14px;color:var(--foreground);font-weight:720;line-height:1.4;
+}
+.vigia-settings-row-label p {
+  margin:6px 0 0;font-size:11px;color:var(--muted);line-height:1.55;max-width:180px;
+}
+.vigia-settings-row-body {min-width:0;display:flex;flex-direction:column;gap:12px}
+.vigia-project-general-fields,
+.vigia-project-listening-fields {
+  background:color-mix(in srgb,var(--panel) 72%,var(--panel-2) 28%);
+  border:1px solid var(--border);border-radius:15px;
+  padding:19px 20px;
+}
+.vigia-project-listening-fields {gap:17px}
+:root[data-theme="dark"] .vigia-project-general-fields,
+:root[data-theme="dark"] .vigia-project-listening-fields {
+  background:linear-gradient(160deg,rgba(42,44,70,.65),rgba(26,30,47,.55));
+  border-color:#41435f;
+}
+.vigia-settings-row-body label {color:var(--foreground);font-size:12px;line-height:1.5}
+.vigia-settings-row-body fieldset {color:var(--foreground);font-size:12px;font-weight:600}
+.vigia-settings-row-body fieldset label {color:var(--foreground);font-size:12px;font-weight:450}
+.vigia-settings-row-body fieldset > div {margin-top:10px;row-gap:9px}
+.vigia-project-input,
+.vigia-settings-row-body input:not([type="checkbox"]):not([type="radio"]),
+.vigia-settings-row-body select,
+.vigia-settings-row-body textarea {
+  background:var(--panel-2);
+  color:var(--foreground);
+  border:1px solid color-mix(in srgb,var(--foreground) 13%,var(--border));
+  border-radius:10px;min-height:38px;
+  font-size:12px;
+  transition:border-color .16s,box-shadow .16s;
+}
+.vigia-project-input:focus-visible,.vigia-settings-row-body :is(input,textarea,select):focus-visible {
+  border-color:var(--accent);outline:2px solid color-mix(in srgb,var(--accent) 18%,transparent);outline-offset:1px;
+}
+.vigia-settings-row-body input[type="checkbox"] {accent-color:var(--accent);width:13px;height:13px}
+.vigia-settings-row-body input::placeholder,
+.vigia-settings-row-body textarea::placeholder {color:var(--muted);opacity:.9}
+.vigia-project-listening-fields > div:first-child {
+  border-radius:12px;
+  border:1px solid color-mix(in srgb,var(--accent) 43%,var(--border));
+  background:var(--soft-purple);
+  padding:14px 16px;
+}
+.vigia-project-listening-fields > div:first-child p {color:var(--foreground)}
+.vigia-project-listening-fields > div:first-child p + p {color:var(--muted)}
+.vigia-project-listening-fields > div:first-child a {
+  background:var(--accent);color:var(--background);
+  min-height:38px;padding:9px 13px;border-radius:9px;
+  font-size:12px;font-weight:700;text-decoration:none;
+}
+.vigia-project-listening-fields > div:first-child a:hover {filter:brightness(1.08)}
+.vigia-project-save-actions {display:flex;justify-content:flex-end;gap:12px;padding:0 0 15px;border:0}
+.vigia-project-save {
+  background:var(--accent);color:var(--background);
+  min-height:40px;padding:10px 22px;
+  border:none;border-radius:10px;font-size:12px;
+  box-shadow:0 4px 12px rgba(106,85,172,.13);
+}
+.vigia-project-save:hover {filter:brightness(1.07)}
+.vigia-project-save:disabled {opacity:.5;box-shadow:none}
+.vigia-benchmark-row .vigia-settings-row-body > p {
+  color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 4px;
+}
+.vigia-settings-mobile-heading {display:none}
+.vigia-benchmark-row .vigia-settings-row-body > div > * {
+  min-width:0;
+}
+.vigia-benchmark-row .vigia-settings-row-body > div.flex.flex-col {
+  gap:7px;
+}
+.vigia-benchmark-row .vigia-settings-row-body .bg-white\/5 {
+  background:var(--panel-2);
+  border:1px solid var(--border);
+}
+.vigia-benchmark-row .vigia-settings-row-body > form {margin:6px 0 0}
+.vigia-sharing-row .vigia-settings-row-body > p {margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.vigia-sharing-row .vigia-settings-row-body > form {margin-top:8px;flex-wrap:wrap}
+.vigia-sharing-row select {min-width:150px;padding-inline:13px}
+.vigia-sharing-row button[type="submit"],.vigia-benchmark-row button[type="submit"] {
+  min-height:38px;padding:8px 15px;border-radius:10px;
+  border:1px solid color-mix(in srgb,var(--accent) 42%,var(--border));
+  color:var(--foreground);
+  background:var(--soft-purple);font-size:12px;
+}
+.vigia-project-danger {padding:21px 0 2px;border-top:1px solid var(--border)}
+.vigia-settings-footnote {margin:11px 4px 0;color:var(--muted);font-size:10px;line-height:1.6}
+.vigia-settings-page :is(.text-slate-100,.text-slate-200,.text-slate-300) {color:var(--foreground)}
+.vigia-settings-page :is(.text-slate-400,.text-slate-500,.text-slate-600) {color:var(--muted)}
+.vigia-settings-page :is(.text-sky-200,.text-sky-300,.text-sky-400) {color:var(--accent)}
+.vigia-settings-page .text-red-400 {color:#ec6178}
+.vigia-settings-page .text-amber-300,.vigia-settings-page .text-amber-400 {color:#dfa53d}
+:root[data-theme="dark"] .vigia-settings-page .text-amber-300 {color:#f5c75a}
+.vigia-project-panel .rounded-lg {border-radius:10px}
+.vigia-project-panel .text-xs {line-height:1.5}
+.vigia-settings-page :is(a,button,input,select,textarea):focus-visible {
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+@media(min-width:1500px) {
+  .vigia-project-panel{padding-inline:32px}
+  .vigia-settings-row{grid-template-columns:230px minmax(0,1fr);gap:32px}
+}
+@media(max-width:980px) {
+  .vigia-settings-row{grid-template-columns:minmax(130px,185px) minmax(0,1fr);gap:17px}
+  .vigia-project-panel{padding:22px}
+}
+@media(max-width:720px) {
+  .vigia-settings-page{padding-bottom:28px}
+  .vigia-project-heading h1{font-size:25px}
+  .vigia-project-heading{gap:11px;margin-bottom:17px}
+  .vigia-project-page-icon{width:39px;height:39px;flex-basis:39px}
+  .vigia-project-tabs{gap:8px}
+  .vigia-project-tab{min-height:39px;padding:8px 12px;font-size:11px}
+  .vigia-project-panel{padding:18px 15px}
+  .vigia-project-panel-heading{padding-bottom:15px;gap:11px}
+  .vigia-project-panel-heading h2{font-size:17px}
+  .vigia-settings-row{grid-template-columns:1fr;gap:12px;padding:18px 0}
+  .vigia-settings-row-label{padding:0}
+  .vigia-settings-row-label p{max-width:none}
+  .vigia-project-general-fields,.vigia-project-listening-fields{padding:14px}
+  .vigia-project-listening-fields>div:first-child {align-items:flex-start}
+  .vigia-project-save-actions{padding-top:8px}
+  .vigia-benchmark-row form input {min-width:0}
+}

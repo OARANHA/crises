@@ -35,7 +35,10 @@ export function proxy(req: NextRequest) {
   }
   // Verifica la firma del cookie di sessione (senza toccare il DB)
   if (verifySession(req.cookies.get(SESSION_COOKIE)?.value) !== null) {
-    return NextResponse.next();
+    const forwarded = new Headers(req.headers);
+    // Trusted internal request pathname: overwrite any incoming spoofed header.
+    forwarded.set('x-vigia-request-path', pathname);
+    return NextResponse.next({ request: { headers: forwarded } });
   }
   if (pathname.startsWith('/api/')) {
     return NextResponse.json({ error: 'non autorizzato' }, { status: 401 });

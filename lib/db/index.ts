@@ -123,6 +123,12 @@ const DDL = [
     session_version INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS client_project_access (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, project_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS client_project_access_project_idx ON client_project_access (project_id)`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE projects ADD COLUMN IF NOT EXISTS owner_id INTEGER`,
   `ALTER TABLE projects ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'private'`,

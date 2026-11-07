@@ -10,10 +10,10 @@ import { clientLocale, tFor } from '@/lib/i18n-dict';
 
 export { ENTITY_COLORS, OVERFLOW_COLOR, entityColor };
 
-const TICK = { fill: '#7c8cab', fontSize: 11 };
+const TICK = { fill: 'var(--muted)', fontSize: 11 };
 const TOOLTIP_STYLE = {
-  backgroundColor: '#16203c', border: '1px solid #1e2a4a',
-  borderRadius: 8, fontSize: 12, color: '#e2e8f0',
+  backgroundColor: 'var(--panel)', border: '1px solid var(--border)',
+  borderRadius: 8, fontSize: 12, color: 'var(--foreground)',
 };
 
 export function VolumeChart({ data }: { data: { day: string; source: string; n: number }[] }) {
@@ -31,11 +31,11 @@ export function VolumeChart({ data }: { data: { day: string; source: string; n: 
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={rows}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e2a4a" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis dataKey="day" tick={TICK} axisLine={false} tickLine={false} />
         <YAxis tick={TICK} axisLine={false} tickLine={false} width={36} />
         <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#ffffff08' }} />
-        <Legend formatter={(v) => <span style={{ color: '#94a3b8', fontSize: 12 }}>{SOURCE_META[v]?.label ?? v}</span>} />
+        <Legend formatter={(v) => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{SOURCE_META[v]?.label ?? v}</span>} />
         {sources.map((s) => (
           <Bar key={s} dataKey={s} stackId="a" fill={SOURCE_META[s]?.color ?? '#64748b'} radius={[2, 2, 0, 0]} />
         ))}
@@ -68,7 +68,7 @@ export function SentimentPie({ data }: { data: { sentiment: string; n: number }[
           ))}
         </Pie>
         <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Legend formatter={(v) => <span style={{ color: '#94a3b8', fontSize: 12 }}>{label[String(v)] ?? v}</span>} />
+        <Legend formatter={(v) => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{label[String(v)] ?? v}</span>} />
       </PieChart>
     </ResponsiveContainer>
   );
@@ -99,7 +99,7 @@ export function ShareOfVoicePie({ data }: { data: { name: string; value: number;
           <Pie data={slices} dataKey="value" nameKey="name" innerRadius={52} outerRadius={86} paddingAngle={2}>
             {slices.map((d, i) => (
               // stroke del colore della superficie = il distacco di 2px fra fette
-              <Cell key={d.name} fill={d.color ?? entityColor(i)} stroke="#10172e" strokeWidth={2} />
+              <Cell key={d.name} fill={d.color ?? entityColor(i)} stroke="var(--panel)" strokeWidth={2} />
             ))}
           </Pie>
           <Tooltip contentStyle={TOOLTIP_STYLE}
@@ -149,11 +149,11 @@ export function BenchmarkTrend({ series }: {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={rows}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e2a4a" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis dataKey="day" tick={TICK} axisLine={false} tickLine={false} />
         <YAxis tick={TICK} axisLine={false} tickLine={false} width={36} />
         <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Legend formatter={(v) => <span style={{ color: '#94a3b8', fontSize: 12 }}>{v}</span>} />
+        <Legend formatter={(v) => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{v}</span>} />
         {active.map((s, i) => (
           <Line key={s.name} dataKey={s.name} stroke={s.color ?? entityColor(i)}
             strokeWidth={2} dot={false} />
@@ -186,11 +186,11 @@ export function SearchInterestTrend({ series }: {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={rows}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e2a4a" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis dataKey="day" tick={TICK} axisLine={false} tickLine={false} />
         <YAxis domain={[0, 100]} tick={TICK} axisLine={false} tickLine={false} width={30} />
         <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Legend formatter={(v) => <span style={{ color: '#94a3b8', fontSize: 12 }}>{v}</span>} />
+        <Legend formatter={(v) => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{v}</span>} />
         {series.map((s, i) => (
           <Line key={s.name} dataKey={s.name} stroke={entityColor(i)}
             strokeWidth={2} dot={false} connectNulls />

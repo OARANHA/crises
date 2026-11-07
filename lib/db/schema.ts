@@ -11,6 +11,12 @@ export type Quality = {
   risk: 'low' | 'medium' | 'high'; note?: string;
 };
 
+/** Explicit client-to-project authorization; never inherit shared team projects. */
+export const clientProjectAccess = pgTable('client_project_access', {
+  userId: integer('user_id').notNull(),
+  projectId: integer('project_id').notNull(),
+});
+
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),

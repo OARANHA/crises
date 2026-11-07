@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, Trash2, Link2, Star, Radar, UploadCloud, Antenna } from 'lucide-react';
+import { Plus, Link2, Star, Radar, UploadCloud, Antenna, Layers3, Settings2, FileText, Radio } from 'lucide-react';
 import { and, eq, gte } from 'drizzle-orm';
 import { getDb } from '@/lib/db';
 import { shareLinks } from '@/lib/db/schema';
@@ -33,8 +33,8 @@ const COUNTRIES = [
   ['PL', 'Poland'], ['JP', 'Japan'],
 ] as const;
 
-const inputCls = 'w-full rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm outline-none placeholder:text-slate-600';
-const btnCls = 'rounded-lg bg-sky-500/90 px-5 py-2 text-sm font-medium text-slate-950 transition hover:bg-sky-400';
+const inputCls = 'vigia-project-input w-full rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm outline-none';
+const btnCls = 'vigia-project-save rounded-lg px-5 py-2 text-sm font-semibold transition';
 
 export const metadata = { title: 'Projects' };
 
@@ -74,25 +74,24 @@ export default async function SettingsPage({ searchParams }: {
   const shareBase = process.env.APP_URL ?? '';
 
   return (
-    <>
+    <div className="vigia-settings-page">
+      <div className="vigia-project-heading">
+        <span className="vigia-project-page-icon" aria-hidden="true"><Layers3 className="size-6" /></span>
       <PageHeader
         title={t('page.settings.title', 'Projects')}
         subtitle="Each project is an independent listening scope: query, languages, geographies and entities to compare"
       />
+      </div>
 
       {/* Project tabs */}
-      <div className="mb-0 flex flex-wrap items-end gap-1 border-b border-[var(--border)]">
+      <div className="vigia-project-tabs" role="navigation" aria-label="Projetos disponíveis">
         {allProjects.map((p) => {
           const active = !isNew && selected?.id === p.id;
           return (
             <Link
               key={p.id}
               href={`/settings?p=${p.id}`}
-              className={`rounded-t-lg border border-b-0 px-4 py-2 text-sm transition ${
-                active
-                  ? 'border-[var(--border)] bg-[var(--panel)] font-medium text-sky-300'
-                  : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'
-              }`}
+              className={'vigia-project-tab' + (active ? ' is-active' : '')}
             >
               {p.name}
             </Link>
@@ -100,21 +99,23 @@ export default async function SettingsPage({ searchParams }: {
         })}
         <Link
           href="/settings?p=new"
-          className={`flex items-center gap-1.5 rounded-t-lg border border-b-0 px-4 py-2 text-sm transition ${
-            isNew
-              ? 'border-[var(--border)] bg-[var(--panel)] font-medium text-sky-300'
-              : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'
-          }`}
+          className={'vigia-project-tab' + (isNew ? ' is-active' : '')}
         >
           <Plus className="size-4" /> New project
         </Link>
       </div>
 
-      <div className="mx-auto max-w-3xl">
+      <div className="vigia-project-shell">
         <div>
           {/* key legata al progetto: forza il remount dei campi (defaultValue) quando
               si cambia scheda, altrimenti gli input non controllati restano coi valori vecchi. */}
-          <section key={isNew ? `new-${newType ?? 'choose'}` : selected?.id ?? 'none'} className="panel rounded-t-none border-t-0 px-5 py-5">
+          <section key={isNew ? `new-${newType ?? 'choose'}` : selected?.id ?? 'none'} className="vigia-project-panel panel">
+            {!isNew && selected && (
+              <div className="vigia-project-panel-heading">
+                <span className="vigia-project-panel-icon" aria-hidden="true"><Settings2 className="size-5" /></span>
+                <div><h2>Configurações do projeto</h2><p>Defina o monitoramento, os acessos e as entidades de comparação deste projeto.</p></div>
+              </div>
+            )}
             {isNew ? (
               !newType ? (
                 /* Passo 0: che tipo di progetto? */
@@ -225,15 +226,18 @@ export default async function SettingsPage({ searchParams }: {
                   <form action={updateProject} className="flex flex-col gap-4">
                     <input type="hidden" name="id" value={selected.id} />
                     <ProjectFields project={selected} />
-                    <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
+                    <div className="vigia-project-save-actions">
                       <SubmitButton className={btnCls} pendingLabel="Saving…">Save changes</SubmitButton>
                     </div>
                   </form>
                 )}
 
-                <hr className="my-5 border-[var(--border)]" />
-
-                <h3 className="mb-1 text-sm font-semibold text-slate-300">Benchmark entities</h3>
+                <div className="vigia-settings-row vigia-benchmark-row">
+                  <div className="vigia-settings-row-label">
+                    <span className="vigia-settings-label-icon"><Layers3 className="size-5" /></span>
+                    <div><h3>Benchmark entities</h3><p>Entidades de comparação e identificação da marca.</p></div>
+                  </div>
+                  <div className="vigia-settings-row-body">
                 <p className="mb-3 text-xs text-slate-500">
                   Brands or competitors to compare on the Benchmark page: mentions citing these keywords are attributed to the entity.
                   Saving a query plan updates the subject and the competitors here automatically; the others stay as they are.
@@ -261,11 +265,14 @@ export default async function SettingsPage({ searchParams }: {
                   </SubmitButton>
                 </form>
 
-                <hr className="my-5 border-[var(--border)]" />
-
-                <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-300">
-                  <Link2 className="size-4 text-sky-400" /> Sharing
-                </h3>
+                  </div>
+                </div>
+                <div className="vigia-settings-row vigia-sharing-row">
+                  <div className="vigia-settings-row-label">
+                    <span className="vigia-settings-label-icon"><Link2 className="size-5" /></span>
+                    <div><h3>Sharing</h3><p>Links de leitura temporários para relatórios.</p></div>
+                  </div>
+                  <div className="vigia-settings-row-body">
                 <p className="mb-3 text-xs text-slate-500">
                   Create a read-only link to show the report to managers or clients without sharing the password. It expires on its own.
                 </p>
@@ -301,21 +308,23 @@ export default async function SettingsPage({ searchParams }: {
                   </SubmitButton>
                 </form>
 
+                  </div>
+                </div>
                 {allProjects.length > 1 && (
-                  <div className="mt-6 border-t border-red-500/20 pt-4">
+                  <div className="vigia-project-danger">
                     <DeleteProject id={selected.id} name={selected.name} />
                   </div>
                 )}
               </>
             )}
           </section>
-          <p className="mt-2 px-1 text-[11px] text-slate-600">
+          <p className="vigia-settings-footnote">
             Note: every active project consumes API quota on each update — with the current budget, keep few of them.
             Source status and budget are now in <span className="text-slate-400">Settings → Sources &amp; budget</span>.
           </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -403,6 +412,12 @@ function TalkwalkerNotice() {
 function ProjectFields({ project }: { project: Project | null }) {
   return (
     <>
+      <div className="vigia-settings-row vigia-form-section">
+        <div className="vigia-settings-row-label">
+          <span className="vigia-settings-label-icon"><FileText className="size-5" /></span>
+          <div><h3>General</h3><p>Identificação e permissões do projeto.</p></div>
+        </div>
+        <div className="vigia-settings-row-body vigia-project-general-fields">
       <label className="text-xs text-slate-400">
         Project name
         <input name="name" defaultValue={project?.name} className={`${inputCls} mt-1`}
@@ -412,6 +427,14 @@ function ProjectFields({ project }: { project: Project | null }) {
         <input type="checkbox" name="shared" defaultChecked={project?.visibility === 'shared'} className="accent-sky-500" />
         Share this project with the whole team (read-only for others)
       </label>
+        </div>
+      </div>
+      <div className="vigia-settings-row vigia-form-section">
+        <div className="vigia-settings-row-label">
+          <span className="vigia-settings-label-icon"><Radio className="size-5" /></span>
+          <div><h3>Listening</h3><p>O que acompanhar e quais fontes consultar.</p></div>
+        </div>
+        <div className="vigia-settings-row-body vigia-project-listening-fields">
       {project ? (
         // La query non si scrive più qui: ha una pagina sua, dove si
         // costruisce a parole, si prova e si modifica.
@@ -481,6 +504,8 @@ function ProjectFields({ project }: { project: Project | null }) {
           className={`${inputCls} mt-1 resize-y`}
           placeholder="e.g. Professional but direct, informal, avoid unnecessary jargon (optional)" />
       </label>
+        </div>
+      </div>
     </>
   );
 }
