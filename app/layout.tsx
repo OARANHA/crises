@@ -17,16 +17,17 @@ import { LiveFavicon } from '@/components/live-favicon';
 import { TextEncodingGuard } from '@/components/text-encoding-guard';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { countPeople } from '@/lib/people-insights';
+import { resolveShellMode } from '@/lib/shell-mode';
 
 const geistSans = localFont({ src: './fonts/Geist-Variable.woff2', variable: '--font-geist-sans', display: 'swap', weight: '100 900' });
 const geistMono = localFont({ src: './fonts/GeistMono-Variable.woff2', variable: '--font-geist-mono', display: 'swap', weight: '100 900' });
 
 export const metadata: Metadata = {
   title: {
-    default: 'Radar — Signal over noise',
-    template: '%s — Radar',
+    default: 'VigiaElus — Inteligência de reputação',
+    template: '%s — VigiaElus',
   },
-  description: 'Social listening and media intelligence',
+  description: 'Monitoramento de reputação, inteligência de fontes e prevenção de crises',
 };
 
 // Tutte le pagine leggono dal database a ogni richiesta: niente prerender statico.
@@ -49,6 +50,7 @@ export default async function RootLayout({
   const stale = !lastIngest || Date.now() - lastIngest.getTime() > 2 * 3600_000;
 
   const demo = process.env.DEMO_MODE === '1';
+  const shellMode = resolveShellMode(user?.role, demo);
   const locale = await getLocale();
   const t = await getT();
   // Le date lato server seguono la lingua scelta (fmtDate legge questo tag).
@@ -61,13 +63,9 @@ export default async function RootLayout({
         {demo && (
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-sky-500/15 px-4 py-2 text-center text-xs text-sky-200">
             <span>🛰️ <strong>{t('demo.live', 'Live demo')}</strong> — {t('demo.banner', 'read-only, sample data. Interactive AI features run when you self-host with your own key.')}</span>
-            <a href="https://github.com/Scognamiglio1969/radar-intelligence" target="_blank" rel="noopener noreferrer"
-              className="rounded-full bg-sky-500/90 px-3 py-0.5 font-semibold text-slate-950 transition hover:bg-sky-400">
-              ⭐ GitHub
-            </a>
           </div>
         )}
-        {user?.role === "client" ? <ClientShell userName={user.name}>{children}</ClientShell> : <>
+        {shellMode === 'public' ? children : shellMode === 'client' && user ? <ClientShell userName={user.name}>{children}</ClientShell> : <>
         <div className="vigia-layout">
           <Sidebar
             projects={projects.map((p) => ({ id: p.id, name: p.name }))}
