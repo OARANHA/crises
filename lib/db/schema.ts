@@ -688,3 +688,54 @@ export const clinicalTrials = pgTable('clinical_trials', {
   news: jsonb('news').$type<TrialNews>(),
   fetchedAt: timestamp('fetched_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Plataforma VigiaElus — catálogo comercial e histórico sem cascata de exclusão.
+export const billingPlans = pgTable('billing_plans', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description').notNull().default(''),
+  monthlyCents: integer('monthly_cents').notNull(),
+  yearlyCents: integer('yearly_cents').notNull(),
+  maxProjects: integer('max_projects').notNull().default(1),
+  maxSources: integer('max_sources').notNull().default(3),
+  active: integer('active').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const billingSubscriptions = pgTable('billing_subscriptions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().unique(),
+  planId: integer('plan_id').notNull(),
+  provider: text('provider').notNull().default('manual'),
+  cadence: text('cadence').notNull().default('month'),
+  status: text('status').notNull().default('pending'),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  periodEnd: timestamp('period_end', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const billingPayments = pgTable('billing_payments', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  planId: integer('plan_id').notNull(),
+  method: text('method').notNull(),
+  cadence: text('cadence').notNull(),
+  amountCents: integer('amount_cents').notNull(),
+  status: text('status').notNull().default('pending'),
+  stripeSessionId: text('stripe_session_id').unique(),
+  stripeInvoiceId: text('stripe_invoice_id').unique(),
+  stripePaymentIntentId: text('stripe_payment_intent_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const billingWebhookEvents = pgTable('billing_webhook_events', {
+  id: text('id').primaryKey(),
+  eventType: text('event_type').notNull(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+});

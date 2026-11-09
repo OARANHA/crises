@@ -493,6 +493,42 @@ const DDL = [
     UNIQUE (run_id, source, external_id)
   )`,
   `CREATE INDEX IF NOT EXISTS mention_discoveries_mention ON mention_discoveries(mention_id, source)`,
+
+  // Administração comercial: somente migrações aditivas.
+  `CREATE TABLE IF NOT EXISTS billing_plans (
+    id SERIAL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '', monthly_cents INTEGER NOT NULL CHECK (monthly_cents >= 100),
+    yearly_cents INTEGER NOT NULL CHECK (yearly_cents >= 100),
+    max_projects INTEGER NOT NULL DEFAULT 1 CHECK (max_projects > 0),
+    max_sources INTEGER NOT NULL DEFAULT 3 CHECK (max_sources > 0),
+    active INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS billing_subscriptions (
+    id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE RESTRICT,
+    plan_id INTEGER NOT NULL REFERENCES billing_plans(id) ON DELETE RESTRICT,
+    provider TEXT NOT NULL DEFAULT 'manual', cadence TEXT NOT NULL DEFAULT 'month',
+    status TEXT NOT NULL DEFAULT 'pending', stripe_customer_id TEXT,
+    stripe_subscription_id TEXT, period_end TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS billing_stripe_subscription_id
+      ON billing_subscriptions(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL`,
+  `CREATE TABLE IF NOT EXISTS billing_payments (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    plan_id INTEGER NOT NULL REFERENCES billing_plans(id) ON DELETE RESTRICT,
+    method TEXT NOT NULL, cadence TEXT NOT NULL, amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+    status TEXT NOT NULL DEFAULT 'pending',
+    stripe_session_id TEXT UNIQUE, stripe_invoice_id TEXT UNIQUE, stripe_payment_intent_id TEXT, stripe_subscription_id TEXT,
+    confirmed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `ALTER TABLE billing_payments ADD COLUMN IF NOT EXISTS stripe_invoice_id TEXT`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS billing_invoice_unique ON billing_payments(stripe_invoice_id) WHERE stripe_invoice_id IS NOT NULL`,
+  `CREATE INDEX IF NOT EXISTS billing_payments_user_date ON billing_payments(user_id, created_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS billing_webhook_events (
+    id TEXT PRIMARY KEY, event_type TEXT NOT NULL, received_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
 ];
 
 async function ensureSchema(db: DB) {

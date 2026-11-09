@@ -1,0 +1,41 @@
+name: VigiaElus Billing QA
+
+on:
+  push:
+    branches:
+      - feat/vigiaelus-platform-billing-2026-11-09
+  pull_request:
+    branches:
+      - feat/vigiaelus-ui-valor-ia-2026-11-09
+
+permissions:
+  contents: read
+
+jobs:
+  billing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependÃªncias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Testes de faturamento e isolamento
+        run: node --import tsx --test --test-concurrency=1 tests/platform-billing.test.ts tests/platform-billing-db.test.ts tests/client-isolation.test.ts
+
+      - name: Build de produÃ§Ã£o
+        run: npm run build -- --webpack

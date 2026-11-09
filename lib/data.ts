@@ -7,6 +7,7 @@ import {
 import { NEWS_SOURCES } from '@/lib/connectors';
 import { getCurrentUser } from '@/lib/auth';
 import { visibleProjectsFor } from '@/lib/project-access';
+import { scopedClientProjects } from '@/lib/billing/access-scope';
 
 /** Normalizza un valore sentiment (incl. legacy IT) a una delle 3 etichette EN. */
 export function normSentimentValue(s: string | null): 'positive' | 'neutral' | 'negative' {
@@ -23,7 +24,8 @@ export function normSentimentValue(s: string | null): 'positive' | 'neutral' | '
 export async function getProjects() {
   const db = await getDb();
   const user = await getCurrentUser();
-  return visibleProjectsFor(db, user);
+  const visible = await visibleProjectsFor(db, user);
+  return user?.role === 'client' ? scopedClientProjects(user.id, visible, db) : visible;
 }
 
 /** Progetto attivo: dal cookie sr_project (se accessibile), altrimenti il primo. */

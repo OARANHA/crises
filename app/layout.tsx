@@ -7,6 +7,7 @@ import './vigia-v5.css';
 import './listening-v7.css';
 import './client-auth.css';
 import './vigia-settings-quality.css';
+import './vigia-platform.css';
 import { Sidebar } from '@/components/sidebar';
 import { ClientShell } from '@/components/client-shell';
 import { ShellTopbar } from '@/components/shell-topbar';
@@ -19,6 +20,7 @@ import { TextEncodingGuard } from '@/components/text-encoding-guard';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { countPeople } from '@/lib/people-insights';
 import { resolveShellMode } from '@/lib/shell-mode';
+import { isPlatformOwner } from '@/lib/billing/owner';
 
 const geistSans = localFont({ src: './fonts/Geist-Variable.woff2', variable: '--font-geist-sans', display: 'swap', weight: '100 900' });
 const geistMono = localFont({ src: './fonts/GeistMono-Variable.woff2', variable: '--font-geist-mono', display: 'swap', weight: '100 900' });
@@ -75,6 +77,7 @@ export default async function RootLayout({
             alertCount={alertCount}
             peopleCount={peopleCount}
             user={user ? { name: user.name, role: user.role } : null}
+            isOwner={isPlatformOwner(user)}
             locale={locale}
           />
           <div className="vigia-workspace">
