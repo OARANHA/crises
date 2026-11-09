@@ -4,7 +4,7 @@ import { getDb } from '@/lib/db';
 import { apiUsage, mentions, stories, briefs, type Quality } from '@/lib/db/schema';
 import { NEWS_SOURCES } from '@/lib/connectors';
 
-import { aiProvider, aiModels, providerKey, priceFor, callOpenAICompat } from '@/lib/ai-provider';
+import { aiProvider, aiModels, providerKey, priceFor, callOpenAICompat, customAiRates, providerEndpoint } from '@/lib/ai-provider';
 
 const HAIKU = 'claude-haiku-4-5';
 const SONNET = 'claude-sonnet-4-6';
@@ -19,7 +19,12 @@ export async function anthropicKey(): Promise<string | undefined> {
  * chosen in Settings → Budget) has its key set, from the UI or env.
  */
 export async function claudeAvailable(): Promise<boolean> {
-  return Boolean(await providerKey(await aiProvider()));
+  const provider = await aiProvider();
+  if (!await providerKey(provider)) return false;
+  if (provider !== 'custom') return true;
+  const [models, rates] = await Promise.all([aiModels(provider), customAiRates()]);
+  if (!models.fast || !models.smart || !rates) return false;
+  try { return Boolean(await providerEndpoint(provider)); } catch { return false; }
 }
 
 /**
@@ -170,6 +175,18 @@ export async function callClaudeDetailed(model: string, purpose: string, system:
     actualModel = model === HAIKU ? m.fast : model === SONNET ? m.smart : model;
   }
 
+  // Sem tarifação real declarada, jamais registrar custo artificial de US$ 0.
+  const customRates = provider === 'custom' ? await customAiRates() : null;
+  if (provider === 'custom' && (!customRates || !actualModel)) {
+    return {
+      text: null,
+      failure: {
+        why: 'call-failed',
+        message: 'Configure os modelos e as tarifas do provedor compatível em Orçamento antes de executar a IA.',
+      },
+    };
+  }
+
   let text: string | null;
   let inputTokens: number;
   let outputTokens: number;
@@ -212,17 +229,31 @@ export async function callClaudeDetailed(model: string, purpose: string, system:
       };
     }
   } else {
-    const r = await callOpenAICompat(provider, key, actualModel, system, user, maxTokens);
-    text = r.text;
-    inputTokens = r.inputTokens;
-    outputTokens = r.outputTokens;
+    try {
+      const r = await callOpenAICompat(provider, key, actualModel, system, user, maxTokens);
+      text = r.text;
+      inputTokens = r.inputTokens;
+      outputTokens = r.outputTokens;
+    } catch (e) {
+      const reason = (e as Error).message || 'Falha de conexão';
+      console.error('[ai] Requisição ao provedor não concluída:', reason);
+      return {
+        text: null,
+        failure: {
+          why: 'call-failed',
+          message: /401|403/.test(reason) ? 'A chave de IA foi recusada. Confira as credenciais em Orçamento.'
+            : /429/.test(reason) ? 'O serviço de IA atingiu o limite de chamadas. Tente novamente após o intervalo indicado pelo fornecedor.'
+            : 'Não foi possível obter resposta da IA. Confira o endereço do serviço, os modelos e as credenciais.',
+        },
+      };
+    }
   }
 
   if (!text) {
     return { text: null, failure: { why: 'empty', message: 'Il modello ha risposto senza testo.' } };
   }
 
-  const price = priceFor(provider, actualModel);
+  const price = customRates ?? priceFor(provider, actualModel);
   const cost = (inputTokens * price.input + outputTokens * price.output) / 1_000_000;
   const db = await getDb();
   await db.insert(apiUsage).values({

@@ -1,3 +1,4 @@
+import { isIP } from 'node:net';
 // ---------------------------------------------------------------------------
 // Provider-agnostic AI engine. Radar can run on Anthropic (Claude), OpenAI,
 // xAI (Grok) or Azure OpenAI (Microsoft Foundry) — the last one for companies
@@ -8,7 +9,7 @@
 // names work without code changes.
 // ---------------------------------------------------------------------------
 
-export type AiProviderId = 'anthropic' | 'openai' | 'grok' | 'azure';
+export type AiProviderId = 'anthropic' | 'openai' | 'grok' | 'azure' | 'custom';
 
 export type AiProviderDef = {
   id: AiProviderId;
@@ -99,6 +100,17 @@ export const AI_PROVIDERS: Record<AiProviderId, AiProviderDef> = {
     },
     defaultPrice: { input: 2.5, output: 10 },
   },
+  custom: {
+    id: 'custom',
+    label: 'OpenAI compatível (personalizado)',
+    keyEnv: 'CUSTOM_OPENAI_API_KEY',
+    endpointEnv: 'CUSTOM_OPENAI_ENDPOINT',
+    maxTokensField: 'max_tokens',
+    models: { fast: '', smart: '' },
+    prices: {},
+    // O uso é bloqueado se o administrador não registrar os custos por token.
+    defaultPrice: { input: 0, output: 0 },
+  },
 };
 
 export const AI_PROVIDER_IDS = Object.keys(AI_PROVIDERS) as AiProviderId[];
@@ -107,7 +119,7 @@ export const AI_PROVIDER_IDS = Object.keys(AI_PROVIDERS) as AiProviderId[];
 export async function aiProvider(): Promise<AiProviderId> {
   const { getMeta } = await import('@/lib/db');
   const v = await getMeta<string>('ai_provider');
-  return v && v in AI_PROVIDERS ? (v as AiProviderId) : 'anthropic';
+  return v && Object.hasOwn(AI_PROVIDERS, v) ? (v as AiProviderId) : 'anthropic';
 }
 
 /** Effective fast/smart models for a provider: UI override or defaults. */
@@ -143,6 +155,46 @@ export function azureChatUrl(raw: string): string {
   return `${base}/chat/completions`;
 }
 
+/**
+ * Endpoint customizado configurável apenas pelo administrador.
+ * Restringimos a hosts públicos HTTPS, sem IP literal, usuário/senha,
+ * portas alternativas, query ou fragmentos. Em produção o operador ainda
+ * precisa permitir explicitamente o hostname no servidor.
+ */
+export function customChatUrl(raw: string, env: { NODE_ENV?: string; AI_COMPAT_ALLOWED_HOSTS?: string } = process.env): string {
+  const input = raw.trim();
+  if (!input || input.length > 500) throw new Error('Informe uma URL HTTPS válida.');
+  let url: URL;
+  try { url = new URL(input); } catch { throw new Error('URL do provedor inválida.'); }
+  const hostname = url.hostname.toLowerCase();
+  if (url.protocol !== 'https:' || url.username || url.password || url.port ||
+      url.search || url.hash || hostname.length > 253 || isIP(hostname) !== 0 ||
+      !(hostname.split('.').length > 1 && hostname.split('.').every(label => /^[a-z0-9-]+$/.test(label) && !label.startsWith('-') && !label.endsWith('-'))) ||
+      hostname.endsWith('.local') || hostname.endsWith('.localhost') ||
+      hostname.endsWith('.internal') || hostname.endsWith('.test') ||
+      hostname.endsWith('.invalid') || hostname.endsWith('.onion')) {
+    throw new Error('Use um hostname público HTTPS, sem credenciais, porta, parâmetros ou IP literal.');
+  }
+  if (env.NODE_ENV === 'production') {
+    const allowed = (env.AI_COMPAT_ALLOWED_HOSTS || '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+    if (!allowed.includes(hostname)) {
+      throw new Error('Host não autorizado. Configure AI_COMPAT_ALLOWED_HOSTS no servidor antes de usar este provedor.');
+    }
+  }
+  const path = url.pathname.replace(new RegExp('/+$'), '');
+  url.pathname = path.endsWith('/chat/completions') ? path : path + '/chat/completions';
+  return url.toString();
+}
+
+export async function customAiRates(): Promise<{ input: number; output: number } | null> {
+  const { getMeta } = await import('@/lib/db');
+  const rates = await getMeta<{ input?: number; output?: number }>('ai_custom_rates_v1');
+  const input = Number(rates?.input);
+  const output = Number(rates?.output);
+  return Number.isFinite(input) && input > 0 && Number.isFinite(output) && output > 0
+    ? { input, output } : null;
+}
+
 /** Effective chat endpoint: fixed for OpenAI/xAI, tenant-specific for Azure. */
 export async function providerEndpoint(provider: AiProviderId): Promise<string | undefined> {
   const def = AI_PROVIDERS[provider];
@@ -150,7 +202,7 @@ export async function providerEndpoint(provider: AiProviderId): Promise<string |
     const { getStoredKey } = await import('@/lib/connector-credentials');
     const stored = await getStoredKey(def.endpointEnv);
     const raw = (stored || process.env[def.endpointEnv] || '').trim();
-    return raw ? azureChatUrl(raw) : undefined;
+    return raw ? (provider === 'custom' ? customChatUrl(raw) : azureChatUrl(raw)) : undefined;
   }
   return def.endpoint;
 }
@@ -188,6 +240,8 @@ export async function callOpenAICompat(
   };
   const res = await fetch(endpoint, {
     method: 'POST',
+    redirect: 'error',
+    signal: AbortSignal.timeout(45_000),
     headers: {
       'Content-Type': 'application/json',
       ...(def.authHeader === 'api-key' ? { 'api-key': key } : { Authorization: `Bearer ${key}` }),

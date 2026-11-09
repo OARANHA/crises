@@ -16,81 +16,86 @@ export type CredField = { env: string; label: string; hint?: string; secret: boo
  */
 export const CREDENTIAL_FIELDS: Record<string, CredField[]> = {
   anthropic: [
-    { env: 'ANTHROPIC_API_KEY', label: 'Anthropic API key', hint: 'from console.anthropic.com', secret: true },
+    { env: 'ANTHROPIC_API_KEY', label: 'Chave API Anthropic', hint: 'gerada no console Anthropic', secret: true },
   ],
   openai: [
-    { env: 'OPENAI_API_KEY', label: 'OpenAI API key', hint: 'from platform.openai.com', secret: true },
+    { env: 'OPENAI_API_KEY', label: 'Chave API OpenAI', hint: 'gerada no painel da OpenAI', secret: true },
+  ],
+  custom: [
+    { env: 'CUSTOM_OPENAI_API_KEY', label: 'Chave API', hint: 'chave fornecida pelo serviço compatível', secret: true },
+    { env: 'CUSTOM_OPENAI_ENDPOINT', label: 'URL da API HTTPS',
+      hint: 'Ex.: https://api.provedor.com/v1 (somente domínios públicos autorizados em produção)', secret: false },
   ],
   grok: [
-    { env: 'XAI_API_KEY', label: 'xAI (Grok) API key', hint: 'from console.x.ai', secret: true },
+    { env: 'XAI_API_KEY', label: 'Chave API Grok (xAI)', hint: 'gerada no console da xAI', secret: true },
   ],
   azure: [
-    { env: 'AZURE_OPENAI_API_KEY', label: 'Azure OpenAI key', hint: 'Azure portal → your Foundry/OpenAI resource → Keys and Endpoint', secret: true },
-    { env: 'AZURE_OPENAI_ENDPOINT', label: 'Resource URL', hint: 'e.g. https://my-resource.openai.azure.com — the model names above are your deployment names', secret: false },
+    { env: 'AZURE_OPENAI_API_KEY', label: 'Chave API Azure OpenAI', hint: 'Azure: recurso Foundry/OpenAI, menu Chaves e endpoint', secret: true },
+    { env: 'AZURE_OPENAI_ENDPOINT', label: 'URL do recurso', hint: 'informe a URL do recurso; os modelos são os nomes de implantação', secret: false },
   ],
   talkwalker: [
     { env: 'TALKWALKER_ACCESS_TOKEN', label: 'Talkwalker access token', hint: 'read_only token issued by your Talkwalker Customer Success Manager', secret: true },
   ],
   reddit: [
-    { env: 'REDDIT_CLIENT_ID', label: 'Client ID', hint: 'Reddit app of type "script", the string under the name', secret: true },
-    { env: 'REDDIT_CLIENT_SECRET', label: 'Client Secret', hint: 'the app’s "secret" field', secret: true },
+    { env: 'REDDIT_CLIENT_ID', label: 'ID do cliente', hint: 'Reddit app of type "script", the string under the name', secret: true },
+    { env: 'REDDIT_CLIENT_SECRET', label: 'Segredo do cliente', hint: 'the app’s "secret" field', secret: true },
   ],
   youtube: [
-    { env: 'YOUTUBE_API_KEY', label: 'API Key', hint: 'free key from Google Cloud Console (YouTube Data API v3)', secret: true },
+    { env: 'YOUTUBE_API_KEY', label: 'Chave API', hint: 'free key from Google Cloud Console (YouTube Data API v3)', secret: true },
   ],
   x: [
     { env: 'X_BEARER_TOKEN', label: 'Bearer Token', hint: 'X API v2, Basic plan', secret: true },
   ],
   instagram: [
-    { env: 'META_ACCESS_TOKEN', label: 'Meta Access Token', hint: 'Meta app + Instagram Business account', secret: true },
-    { env: 'INSTAGRAM_USER_ID', label: 'Instagram User ID', secret: false },
+    { env: 'META_ACCESS_TOKEN', label: 'Meta Token de acesso', hint: 'Meta app + Instagram Business account', secret: true },
+    { env: 'INSTAGRAM_USER_ID', label: 'ID do usuário Instagram', secret: false },
   ],
   facebook: [
-    { env: 'META_ACCESS_TOKEN', label: 'Meta Access Token', hint: 'The same token as the Meta app', secret: true },
-    { env: 'FACEBOOK_PAGE_ID', label: 'Facebook Page ID', hint: 'one or more, comma-separated', secret: false },
+    { env: 'META_ACCESS_TOKEN', label: 'Meta Token de acesso', hint: 'The same token as the Meta app', secret: true },
+    { env: 'FACEBOOK_PAGE_ID', label: 'ID da página Facebook', hint: 'um ou mais valores separados por vírgula', secret: false },
   ],
   tiktok: [
     { env: 'TIKTOK_CLIENT_KEY', label: 'Client Key', hint: 'TikTok Research API', secret: true },
-    { env: 'TIKTOK_CLIENT_SECRET', label: 'Client Secret', secret: true },
+    { env: 'TIKTOK_CLIENT_SECRET', label: 'Segredo do cliente', secret: true },
   ],
   linkedin: [
-    { env: 'LINKEDIN_ACCESS_TOKEN', label: 'Access Token', hint: 'Community Management API', secret: true },
-    { env: 'LINKEDIN_ORG_ID', label: 'Organization ID', secret: false },
+    { env: 'LINKEDIN_ACCESS_TOKEN', label: 'Token de acesso', hint: 'Community Management API', secret: true },
+    { env: 'LINKEDIN_ORG_ID', label: 'ID da organização', secret: false },
   ],
   linkedin_web: [
-    { env: 'TAVILY_API_KEY', label: 'Tavily API Key', hint: 'free key from app.tavily.com (1,000 searches/month)', secret: true },
+    { env: 'TAVILY_API_KEY', label: 'Tavily Chave API', hint: 'free key from app.tavily.com (1,000 searches/month)', secret: true },
   ],
   newsapi: [
-    { env: 'NEWSAPI_KEY', label: 'API Key', hint: 'newsapi.org', secret: true },
+    { env: 'NEWSAPI_KEY', label: 'Chave API', hint: 'newsapi.org', secret: true },
   ],
   newsdata: [
-    { env: 'NEWSDATA_API_KEY', label: 'API Key', hint: 'free, from newsdata.io/register (200 credits a day, commercial use allowed)', secret: true },
+    { env: 'NEWSDATA_API_KEY', label: 'Chave API', hint: 'free, fornecida pelo NewsData.io (200 credits a day, commercial use allowed)', secret: true },
   ],
   podcastindex: [
-    { env: 'PODCASTINDEX_API_KEY', label: 'API Key', hint: 'free, from api.podcastindex.org (sent by email)', secret: true },
+    { env: 'PODCASTINDEX_API_KEY', label: 'Chave API', hint: 'free, fornecida pelo Podcast Index (sent by email)', secret: true },
     { env: 'PODCASTINDEX_API_SECRET', label: 'API Secret', hint: 'the secret delivered together with the key', secret: true },
   ],
   mcp: [
     { env: 'RADAR_MCP_TOKEN', label: 'MCP access token', hint: 'protects /api/mcp — generate one from the MCP page', secret: true },
   ],
   factcheck: [
-    { env: 'GOOGLE_FACTCHECK_API_KEY', label: 'API Key', hint: 'Google Cloud key with the "Fact Check Tools API" enabled — the YouTube key works too once that API is enabled in its project', secret: true },
+    { env: 'GOOGLE_FACTCHECK_API_KEY', label: 'Chave API', hint: 'Google Cloud key with the "Fact Check Tools API" enabled — the YouTube key works too once that API is enabled in its project', secret: true },
   ],
   googleplaces: [
-    { env: 'GOOGLE_PLACES_API_KEY', label: 'API Key', hint: 'free-tier key from Google Cloud Console (Places API)', secret: true },
+    { env: 'GOOGLE_PLACES_API_KEY', label: 'Chave API', hint: 'free-tier key from Google Cloud Console (Places API)', secret: true },
   ],
   discord: [
-    { env: 'DISCORD_BOT_TOKEN', label: 'Bot Token', hint: 'from discord.com/developers — invite the bot to your server first', secret: true },
-    { env: 'DISCORD_CHANNEL_IDS', label: 'Channel IDs', hint: 'one or more, comma-separated (right-click a channel → Copy Channel ID)', secret: false },
+    { env: 'DISCORD_BOT_TOKEN', label: 'Token do bot', hint: 'from discord.com/developers — invite the bot to your server first', secret: true },
+    { env: 'DISCORD_CHANNEL_IDS', label: 'IDs dos canais', hint: 'um ou mais valores separados por vírgula (right-click a channel → Copy Channel ID)', secret: false },
   ],
   'football-data': [
-    { env: 'FOOTBALL_DATA_API_KEY', label: 'API Key', hint: 'free, from football-data.org/client/register', secret: true },
+    { env: 'FOOTBALL_DATA_API_KEY', label: 'Chave API', hint: 'disponível em football-data.org/client/register', secret: true },
   ],
   alphavantage: [
-    { env: 'ALPHA_VANTAGE_API_KEY', label: 'API Key', hint: 'free, from alphavantage.co/support/#api-key (email only, no password)', secret: true },
+    { env: 'ALPHA_VANTAGE_API_KEY', label: 'Chave API', hint: 'disponível em alphavantage.co/support/#api-key (email only, no password)', secret: true },
   ],
   yelp: [
-    { env: 'YELP_API_KEY', label: 'API Key', hint: 'free, from fusion.yelp.com/api-keys (a Yelp business account)', secret: true },
+    { env: 'YELP_API_KEY', label: 'Chave API', hint: 'disponível em fusion.yelp.com/api-keys (a Yelp business account)', secret: true },
   ],
 };
 

@@ -23,18 +23,18 @@ export function ConnectorKeys({ connectorId, fields }: {
   const action = saveConnectorKeysAction.bind(null, connectorId);
 
   return (
-    <div className="mt-1">
+    <div className="vigia-credentials mt-2">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium transition ${
+        className={`flex items-center gap-1 rounded-md border px-3 py-2 text-xs font-medium transition ${
           configured
-            ? 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
-            : 'border-[var(--border)] text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            ? 'border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10'
+            : 'border-[var(--border)] text-[var(--muted)] hover:bg-[var(--panel-2)] hover:text-[var(--foreground)]'
         }`}
       >
         {configured ? <Check className="size-3" /> : <KeyRound className="size-3" />}
-        {configured ? 'Keys set · edit' : 'Enter API keys'}
+        {configured ? 'Chaves configuradas · editar' : 'Configurar chaves'}
       </button>
 
       {open && (
@@ -45,9 +45,9 @@ export function ConnectorKeys({ connectorId, fields }: {
         >
           {fields.map((f) => (
             <label key={f.env} className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-slate-300">
+              <span className="text-xs font-medium text-[var(--foreground)]">
                 {f.label}
-                {f.hint && <span className="ml-1 font-normal text-slate-600">· {f.hint}</span>}
+                {f.hint && <span className="ml-1 font-normal text-[var(--muted)]">· {f.hint}</span>}
                 {f.set && f.fromEnv && (
                   <span className="ml-1 font-normal text-amber-500/80">· attiva da variabile d’ambiente</span>
                 )}
@@ -58,28 +58,28 @@ export function ConnectorKeys({ connectorId, fields }: {
                 autoComplete="off"
                 spellCheck={false}
                 defaultValue={f.secret ? '' : (f.display ?? '')}
-                placeholder={f.secret ? (f.set ? `${f.display ?? 'set'} · leave blank to keep` : 'paste the value') : 'paste the value'}
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--panel)] px-2.5 py-1.5 text-xs outline-none placeholder:text-slate-600 focus:border-sky-500/50"
+                placeholder={f.secret ? (f.set ? `${f.display ?? 'set'} · deixe vazio para manter` : 'Informe o valor') : 'Informe o valor'}
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--panel)] px-2.5 py-1.5 text-xs outline-none placeholder:text-[var(--muted)] focus:border-sky-500/50"
               />
             </label>
           ))}
           <div className="flex items-center gap-2 pt-1">
             <SubmitButton
-              pendingLabel="Saving…"
+              pendingLabel="Salvando…"
               className="rounded-md bg-sky-500 px-3 py-1 text-xs font-semibold text-slate-950 transition hover:bg-sky-400"
             >
-              Save keys
+              Salvar chaves
             </SubmitButton>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-500 transition hover:text-slate-300"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[var(--muted)] transition hover:text-[var(--foreground)]"
             >
-              <X className="size-3" /> Cancel
+              <X className="size-3" /> Cancelar
             </button>
           </div>
-          <p className="text-[10px] leading-relaxed text-slate-600">
-            Keys are stored encrypted and apply to the whole account. They are never shown in clear text.
+          <p className="text-[10px] leading-relaxed text-[var(--muted)]">
+            As chaves são armazenadas criptografadas e utilizadas pelo ambiente. O valor completo não é exibido.
           </p>
         </form>
       )}

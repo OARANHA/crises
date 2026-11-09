@@ -6,6 +6,7 @@ import './globals.css';
 import './vigia-v5.css';
 import './listening-v7.css';
 import './client-auth.css';
+import './vigia-settings-quality.css';
 import { Sidebar } from '@/components/sidebar';
 import { ClientShell } from '@/components/client-shell';
 import { ShellTopbar } from '@/components/shell-topbar';
