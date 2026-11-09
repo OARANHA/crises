@@ -3,8 +3,12 @@
  * Em produção nenhuma credencial conhecida pode ser provisionada.
  * Instalações locais preservam o fluxo histórico com troca obrigatória.
  */
-export type AdminBootstrapEnv = Pick<NodeJS.ProcessEnv,
-  'NODE_ENV' | 'ADMIN_EMAIL' | 'ADMIN_PASSWORD' | 'ADMIN_NAME'>;
+export type AdminBootstrapEnv = {
+  NODE_ENV?: string;
+  ADMIN_EMAIL?: string;
+  ADMIN_PASSWORD?: string;
+  ADMIN_NAME?: string;
+};
 
 export function initialAdminCredentials(env: AdminBootstrapEnv = process.env) {
   const configuredPassword = env.ADMIN_PASSWORD?.trim() || '';
