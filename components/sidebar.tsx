@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Radar, Ear, Bell, BarChart3, FileText,
-  Settings2, Menu, X, LogOut, UserCircle2, ChevronDown,
+  Settings2, Menu, X, LogOut, UserCircle2, ChevronDown, CreditCard,
 } from 'lucide-react';
 import { RefreshButton } from './refresh-button';
 import { Brand, BrandMark } from './brand';
@@ -32,11 +32,12 @@ type Props = {
   peopleCount?: number;
   user?: { name: string; role: string } | null;
   locale?: Locale;
+  isOwner?: boolean;
 };
 
 export function Sidebar({
   projects, currentId, lastIngest, alertCount = 0,
-  user = null, locale = 'pt',
+  user = null, locale = 'pt', isOwner = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -75,6 +76,10 @@ export function Sidebar({
           })}
         </nav>
         <div className="vigia-rail-bottom">
+          {isOwner && <Link href="/plataforma" className="vigia-rail-link"
+            aria-label="Administração da plataforma" title="Administração da plataforma">
+            <CreditCard className="size-[19px]" />
+          </Link>}
           <Link href="/settings" className="vigia-rail-link" aria-label="Configurações" title="Configurações">
             <Settings2 className="size-[19px]" />
           </Link>
@@ -131,6 +136,9 @@ export function Sidebar({
               })}
             </nav>
             <div className="vigia-drawer-footer">
+              {isOwner && <Link href="/plataforma" className="vigia-drawer-link" onClick={() => setOpen(false)}>
+                <CreditCard className="size-4" /> Administração da plataforma
+              </Link>}
               <RefreshButton locale={locale} />
               <span className="text-xs" style={{ color: 'var(--muted)' }}>
                 {lastIngest ? 'Última atualização: ' +

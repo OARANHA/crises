@@ -30,7 +30,8 @@ export function proxy(req: NextRequest) {
   }
   if (pathname.startsWith('/landing') || pathname.startsWith('/login')
     || pathname.startsWith('/api/auth') || pathname.startsWith('/api/cron/')
-    || pathname.startsWith('/share/') || pathname.startsWith('/api/mcp')) {
+    || pathname.startsWith('/share/') || pathname.startsWith('/api/mcp')
+    || pathname === '/api/billing/webhook/stripe') {
     return NextResponse.next();
   }
   // Verifica la firma del cookie di sessione (senza toccare il DB)

@@ -7,6 +7,7 @@ import { clientProjectAccess, projects, users } from '@/lib/db/schema';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 import { isDemoMode } from '@/lib/session';
+import { entitlement } from '@/lib/billing/service';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Clientes | VigiaElus' };
@@ -45,6 +46,9 @@ async function updateAccess(form: FormData) {
   const available = await db.select({id:projects.id}).from(projects);
   const valid = new Set(available.map(p=>p.id));
   if (wanted.some(id=>!valid.has(id))) throw new Error('Projeto não autorizado');
+  const access = await entitlement(client.id, db);
+  if (!access.legacy && wanted.length > (access.active ? access.plan!.maxProjects : 0))
+    throw new Error('O cliente ultrapassaria a quantidade de projetos permitida pelo plano vigente.');
   await db.delete(clientProjectAccess).where(eq(clientProjectAccess.userId,client.id));
   if (wanted.length) await db.insert(clientProjectAccess).values(wanted.map(projectId=>({userId:client.id,projectId})));
   redirect('/clientes?updated=1');
