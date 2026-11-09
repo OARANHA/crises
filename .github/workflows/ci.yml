@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2, feat/vigiaelus-client-portal-scan-v8]
+    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2, feat/vigiaelus-client-portal-scan-v8, fix/vigiaelus-p0-retencao-admin-2026-11-09]
   pull_request:
-    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-global-ui, feat/vigiaelus-client-portal-scan-v8]
+    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-global-ui, feat/vigiaelus-client-portal-scan-v8, fix/vigiaelus-p0-retencao-admin-2026-11-09]
 
 jobs:
   build:

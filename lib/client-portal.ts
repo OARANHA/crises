@@ -20,7 +20,7 @@ export async function clientOverview(projectId: number) {
   const items = dashboard.latest.slice(0, 7).map((m) => ({
     id: m.id,
     source: m.source,
-    title: m.title || 'PublicaÃ§Ã£o sem tÃ­tulo',
+    title: m.title || 'Publicação sem título',
     url: m.url || null,
     publishedAt: m.publishedAt.toISOString(),
     sentiment: m.sentiment ?? null,
@@ -52,7 +52,7 @@ export async function clientMentions(projectId: number, filters: {
     pageSize: list.pageSize,
     mentions: list.rows.map((m) => ({
       id: m.id,
-      title: m.title || 'PublicaÃ§Ã£o sem tÃ­tulo',
+      title: m.title || 'Publicação sem título',
       source: m.source,
       excerpt: (m.content || '').slice(0, 220),
       url: m.url || null,
