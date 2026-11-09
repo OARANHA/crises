@@ -1,0 +1,119 @@
+/* VigiaElus — legibilidade e ritmo das configurações no claro e escuro.
+   Escopo deliberadamente local: não altera os demais módulos. */
+.vigia-settings-quality {
+  --sq-positive:#197453;
+  --sq-warning:#946522;
+  --sq-danger:#aa3651;
+  --sq-tint:color-mix(in srgb,var(--accent) 9%,var(--panel));
+  max-width:1320px;
+  color:var(--foreground);
+  font-family:var(--font-geist-sans),system-ui,sans-serif;
+}
+:root[data-theme="dark"] .vigia-settings-quality {
+  --sq-positive:#74dcb3;
+  --sq-warning:#f2cb80;
+  --sq-danger:#f5a0ae;
+}
+.vigia-settings-quality .settings-two-columns {
+  display:grid;grid-template-columns:minmax(0,1.16fr) minmax(340px,.84fr);gap:22px;align-items:start;
+}
+.vigia-settings-quality .settings-panel {min-width:0;background:var(--panel);color:var(--foreground);box-shadow:0 10px 30px rgba(24,30,54,.045)}
+.vigia-settings-quality .settings-section-heading {display:flex;align-items:center;gap:10px;color:var(--foreground);}
+.vigia-settings-quality .settings-section-heading svg {color:var(--accent);flex:0 0 auto}
+.vigia-settings-quality .settings-section-heading h2 {font-size:17px;line-height:1.45;font-weight:750;letter-spacing:-.018em}
+.vigia-settings-quality .settings-section-heading h3 {font-size:14px;line-height:1.4;font-weight:700}
+.vigia-settings-quality .settings-explain {color:var(--muted);font-size:13px;line-height:1.65;max-width:76ch}
+.vigia-settings-quality .settings-minor-heading {font-size:13px;color:var(--foreground);font-weight:740;margin-top:22px;margin-bottom:10px}
+.vigia-settings-quality .settings-footnote {margin-top:11px;color:var(--muted);font-size:12px;line-height:1.6}
+.vigia-settings-quality .settings-provider-option {min-height:84px;background:var(--panel-2);border:1px solid var(--border);border-radius:13px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:15px;text-align:left;transition:background .18s,border-color .18s;color:var(--foreground)}
+.vigia-settings-quality .settings-provider-option:hover {background:var(--hover);border-color:var(--accent)}
+.vigia-settings-quality .settings-provider-option.is-selected {background:var(--sq-tint);border-color:var(--accent)}
+.vigia-settings-quality .settings-provider-name {display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px}
+.vigia-settings-quality .settings-provider-name strong {font-size:13px;line-height:1.45;font-weight:720}
+.vigia-settings-quality .settings-provider-name svg {color:var(--accent);flex:0 0 auto}
+.vigia-settings-quality .settings-provider-state {font-size:12px;color:var(--muted)}
+.vigia-settings-quality .settings-group {padding-top:24px;margin-top:24px;border-top:1px solid var(--border)}
+.vigia-settings-quality .settings-group>h3 {font-size:14px;font-weight:730;margin-bottom:10px}
+.vigia-settings-quality .settings-warning {margin-top:12px;color:var(--sq-warning);font-size:12px;line-height:1.6}
+.vigia-settings-quality .settings-model-form {display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.vigia-settings-quality .settings-model-form label {display:flex;flex:1 1 185px;min-width:0;flex-direction:column;gap:8px}
+.vigia-settings-quality .settings-model-form label>span,.vigia-settings-quality .settings-compact-label>span:first-child {color:var(--muted);font-weight:670;font-size:12px}
+.vigia-settings-quality .settings-model-form input,.vigia-settings-quality .settings-inline-form input {width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);font-size:13px;color:var(--foreground)}
+.vigia-settings-quality .settings-secondary-action {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:10px 14px;background:var(--panel-2);color:var(--foreground);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;transition:background .15s;white-space:nowrap}
+.vigia-settings-quality .settings-secondary-action:hover {background:var(--hover)}
+.vigia-settings-quality .settings-feedback {font-size:12px;margin-top:11px}
+.vigia-settings-quality .settings-feedback.is-ok {color:var(--sq-positive)}
+.vigia-settings-quality .settings-feedback.is-error {color:var(--sq-danger)}
+.vigia-settings-quality .settings-cost-control {display:flex;flex-direction:column;gap:18px;padding-top:23px;margin-top:23px;border-top:1px solid var(--border)}
+.vigia-settings-quality .settings-cost-control .settings-minor-heading {margin:0 0 9px}
+.vigia-settings-quality .settings-inline-form {display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.vigia-settings-quality .settings-compact-label {display:flex;flex-direction:column;gap:8px;min-width:170px;max-width:260px;flex:1}
+.vigia-settings-quality .settings-password-input {display:flex;align-items:center;gap:8px;min-width:0;position:relative}
+.vigia-settings-quality .settings-password-input>svg {position:absolute;left:11px;color:var(--muted)}
+.vigia-settings-quality .settings-password-input>input {padding-left:36px}
+.vigia-settings-quality .settings-total {display:flex;flex-direction:column;gap:6px;padding:17px;background:var(--panel-2);border-radius:12px}
+.vigia-settings-quality .settings-total span {font-size:12px;color:var(--muted);font-weight:660}
+.vigia-settings-quality .settings-total strong {font-size:25px;line-height:1.2;font-weight:780;font-variant-numeric:tabular-nums}
+.vigia-settings-quality .settings-total small {font-size:12px;color:var(--muted);line-height:1.5}
+.vigia-settings-quality .settings-spend-row {display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:22px 0 12px}
+.vigia-settings-quality .settings-spend-row strong {font-size:32px;letter-spacing:-.03em;font-weight:780}
+.vigia-settings-quality .settings-spend-row span {font-size:13px;color:var(--muted)}
+.vigia-settings-quality .settings-spend-track {height:9px;background:var(--panel-2);border-radius:99px;overflow:hidden}
+.vigia-settings-quality .settings-spend-track>span {display:block;height:100%;border-radius:99px;background:var(--sq-positive)}
+.vigia-settings-quality .settings-spend-track>span[data-warning="true"] {background:var(--sq-warning)}
+.vigia-settings-quality .settings-notice {display:flex;align-items:flex-start;gap:11px;margin-top:20px;padding:15px;border-radius:12px;background:color-mix(in srgb,var(--sq-warning) 9%,var(--panel));color:var(--foreground);font-size:13px;line-height:1.65}
+.vigia-settings-quality .settings-notice svg {color:var(--sq-warning);flex:0 0 auto}
+.vigia-settings-quality .settings-cost-purposes {display:flex;flex-direction:column;gap:0;margin-top:18px;border-top:1px solid var(--border)}
+.vigia-settings-quality .settings-cost-purposes>div {display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+.vigia-settings-quality .settings-cost-purposes strong {color:var(--foreground);font-weight:690}
+.vigia-settings-quality .settings-paid-status {display:flex;flex-direction:column;gap:5px;padding:16px 0;margin-top:16px;border-bottom:1px solid var(--border)}
+.vigia-settings-quality .settings-paid-status strong {font-size:16px;font-weight:730}
+.vigia-settings-quality .settings-paid-status span {font-size:12px;line-height:1.6;color:var(--muted)}
+.vigia-settings-quality .settings-cost-purposes>.settings-paid-item {display:flex;flex-direction:column;gap:5px}
+.vigia-settings-quality .settings-paid-item span {line-height:1.6}
+.vigia-settings-quality .settings-reference-row {display:flex;flex-direction:column;gap:4px;padding:9px 0;font-size:12px;line-height:1.55;color:var(--muted);border-bottom:1px solid var(--border)}
+.vigia-settings-quality .settings-reference-row strong {color:var(--foreground);font-weight:690}
+.vigia-settings-quality .settings-text-link {display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-size:13px;font-weight:720;color:var(--accent)}
+.vigia-settings-quality .settings-source-summary {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:20px 0 16px}
+.vigia-settings-quality .settings-source-summary>div {display:flex;flex-wrap:wrap;align-content:flex-start;column-gap:8px;row-gap:5px;min-width:0;align-items:center;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:16px}
+.vigia-settings-quality .settings-source-summary svg {color:var(--accent);flex:0 0 auto}
+.vigia-settings-quality .settings-source-summary strong {font-size:24px;font-weight:780;font-variant-numeric:tabular-nums}
+.vigia-settings-quality .settings-source-summary span {width:100%;color:var(--muted);font-size:12px;line-height:1.45}
+.vigia-settings-quality .settings-source-disclaimer {font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:20px}
+.vigia-settings-quality .settings-source-section {padding:24px 27px;margin-bottom:20px}
+.vigia-settings-quality .settings-source-section>.settings-explain {margin-top:6px}
+.vigia-settings-quality .settings-source-categories {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:23px 32px;margin-top:24px}
+.vigia-settings-quality .settings-source-category {min-width:0}
+.vigia-settings-quality .settings-source-category h3 {margin-bottom:12px;font-size:12px;font-weight:750;letter-spacing:.015em;color:var(--muted)}
+.vigia-settings-quality .settings-source-rows {display:flex;flex-direction:column;gap:0}
+.vigia-settings-quality .settings-source-rows>div {border-top:1px solid var(--border);padding:8px 0}
+.vigia-settings-quality .settings-source-row {display:grid;grid-template-columns:minmax(0,43%) minmax(0,1fr);align-items:center;gap:12px;min-height:43px}
+.vigia-settings-quality .settings-source-identity {display:flex;align-items:center;gap:8px;min-width:0;position:relative}
+.vigia-settings-quality .settings-source-identity strong {font-size:13px;font-weight:700;color:var(--foreground);line-height:1.45;overflow-wrap:anywhere;min-width:0}
+.vigia-settings-quality .settings-source-result {font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.vigia-settings-quality .settings-source-dot {width:9px;height:9px;flex:0 0 auto;border-radius:50%;background:var(--muted)}
+.vigia-settings-quality .settings-source-dot[data-state="ok"] {background:var(--sq-positive)}
+.vigia-settings-quality .settings-source-dot[data-state="failed"] {background:var(--sq-danger)}
+.vigia-settings-quality .settings-source-dot[data-state="partial"] {background:var(--sq-warning)}
+.vigia-settings-quality .settings-source-help {position:relative;flex:0 0 auto}
+.vigia-settings-quality .settings-source-help summary {display:flex;align-items:center;justify-content:center;width:34px;height:34px;cursor:pointer;color:var(--muted);border-radius:9px;list-style:none}
+.vigia-settings-quality .settings-source-help summary::-webkit-details-marker {display:none}
+.vigia-settings-quality .settings-source-help summary:hover {background:var(--panel-2);color:var(--accent)}
+.vigia-settings-quality .settings-source-help>div {position:absolute;z-index:30;top:36px;left:-185px;width:min(310px,82vw);padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--panel);box-shadow:0 12px 28px rgba(0,0,0,.17);font-size:12px;line-height:1.6;color:var(--foreground)}
+.vigia-settings-quality .vigia-credentials>button {min-height:36px;font-size:12px}
+.vigia-settings-quality .vigia-credentials form {background:var(--panel-2);color:var(--foreground)}
+.vigia-settings-quality .vigia-credentials label>span {color:var(--foreground)}
+.vigia-settings-quality .vigia-credentials label input {min-height:40px;font-size:13px;color:var(--foreground);background:var(--panel)}
+.vigia-settings-quality input:focus-visible,.vigia-settings-quality button:focus-visible,.vigia-settings-quality summary:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:1080px) {
+  .vigia-settings-quality .settings-two-columns {grid-template-columns:1fr}
+  .vigia-settings-quality .settings-source-summary {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:690px) {
+  .vigia-settings-quality .settings-source-categories {grid-template-columns:1fr}
+  .vigia-settings-quality .settings-source-row {grid-template-columns:1fr;gap:4px}
+  .vigia-settings-quality .settings-source-result {padding-left:17px}
+  .vigia-settings-quality .settings-source-section {padding:19px}
+  .vigia-settings-quality .settings-model-form label {flex-basis:100%}
+  .vigia-settings-quality .settings-source-summary>div {padding:13px}
+}

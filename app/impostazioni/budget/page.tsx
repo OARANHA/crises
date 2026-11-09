@@ -1,34 +1,33 @@
 import { getConnectorCredStatuses, hydrateConnectorCredentials } from '@/lib/connector-credentials';
-import { CONNECTORS } from '@/lib/connectors';
-import { SOURCE_META } from '@/lib/connectors';
+import { CONNECTORS, SOURCE_META } from '@/lib/connectors';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { CostControl } from '@/components/cost-control';
 import { AiEngine, type EngineOption } from '@/components/ai-engine';
 import { claudeAvailable, costControl } from '@/lib/claude';
-import { AI_PROVIDERS, AI_PROVIDER_IDS, aiProvider, aiModels } from '@/lib/ai-provider';
+import { AI_PROVIDERS, AI_PROVIDER_IDS, aiProvider, aiModels, customAiRates } from '@/lib/ai-provider';
 import { PageHeader } from '@/components/ui';
-import { getT } from '@/lib/i18n';
-import { ExternalLink } from 'lucide-react';
+import { AlertCircle, ExternalLink, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
-export const metadata = { title: 'Budget' };
+export const metadata = { title: 'Orçamento e custos' };
 
-// How each paid connector is billed — by the provider, not metered by Radar.
 const PAID_NOTE: Record<string, string> = {
-  x: 'X API — Basic plan, a flat ~$200/month subscription billed by X.',
-  newsapi: 'NewsAPI — free developer tier, paid plans for production. Billed by newsapi.org.',
-  instagram: 'Meta Graph API — free to call, but requires a Business account. No per-call fee.',
-  facebook: 'Meta Graph API — free to call, tied to your Page/token. No per-call fee.',
-  tiktok: 'TikTok Research API — free, approval-gated by TikTok. No per-call fee.',
-  linkedin: 'LinkedIn — free, limited to your own organization page.',
+  x: 'Cobrança e limites definidos pelo contrato de API do X.',
+  newsapi: 'Possui planos e cotas próprios; confirme as condições comerciais do seu plano.',
+  instagram: 'Depende de conta profissional e permissões válidas da plataforma Meta.',
+  facebook: 'Depende das permissões e limites de acesso à API da Meta.',
+  tiktok: 'Acesso sujeito à aprovação e às regras da API de pesquisa.',
+  linkedin: 'Acesso limitado às permissões e à organização cadastrada.',
+  talkwalker: 'Custos e cotas dependem do contrato com o fornecedor.',
 };
 
 export default async function BudgetPage() {
-  const t = await getT();
   await hydrateConnectorCredentials();
-  const [cost, credStatuses, currentUser, activeProvider] = await Promise.all([
+  const [cost, credStatuses, user, activeProvider, customRates, aiReady] = await Promise.all([
     costControl(), getConnectorCredStatuses(), getCurrentUser(), aiProvider(),
+    customAiRates(), claudeAvailable(),
   ]);
-  const isAdm = isAdmin(currentUser);
+  const isAdm = isAdmin(user);
   const engineOptions: EngineOption[] = await Promise.all(AI_PROVIDER_IDS.map(async (id) => ({
     id,
     label: AI_PROVIDERS[id].label,
@@ -37,110 +36,109 @@ export default async function BudgetPage() {
     models: await aiModels(id),
     defaults: AI_PROVIDERS[id].models,
   })));
-  const budget = cost.budget;
-  const budgetPct = Math.min(100, (cost.current.cost / budget) * 100);
 
-  const paidActive = CONNECTORS
-    .filter((c) => c.tier === 'premium')
-    .filter((c) => credStatuses[c.id]?.fields.some((f) => f.set));
+  const activePaid = CONNECTORS
+    .filter((connector) => connector.tier === 'premium')
+    .filter((connector) => credStatuses[connector.id]?.fields.some((field) => field.set));
+  const pct = Math.min(100, Math.max(0, (cost.current.cost / Math.max(0.01, cost.budget)) * 100));
 
   return (
-    <>
+    <div className="vigia-settings-quality">
       <PageHeader
-        title={t('page.budget.title', 'Budget & costs')}
-        subtitle="The AI key that powers analysis, its spend cap, and where your paid data-source costs come from."
+        title="Orçamento e custos"
+        subtitle="Controle o provedor de IA, os limites de gasto e as conexões de fontes externas."
       />
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Colonna AI: chiave + spesa/budget */}
-        <div className="flex flex-col gap-4">
-          {isAdm && (
-            <AiEngine options={engineOptions} active={activeProvider} />
-          )}
-
-          <section className="panel h-fit px-5 py-4">
-            <h2 className="mb-3 text-sm font-semibold text-slate-300">AI spend & budget</h2>
-            {await claudeAvailable() ? (
+      <div className="settings-two-columns">
+        <div className="flex min-w-0 flex-col gap-5">
+          {isAdm && <AiEngine options={engineOptions} active={activeProvider} customRates={customRates} />}
+          <section className="panel settings-panel px-6 py-6">
+            <div className="settings-section-heading">
+              <ShieldCheck size={18} aria-hidden="true" />
+              <h2>Consumo estimado da IA</h2>
+            </div>
+            {aiReady ? (
               <>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold">${cost.current.cost.toFixed(2)}</p>
-                  <p className="text-sm text-slate-500">of ${budget.toFixed(2)} — since last reset</p>
+                <div className="settings-spend-row">
+                  <strong>{cost.current.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'USD' })}</strong>
+                  <span>de {cost.budget.toLocaleString('pt-BR', { style: 'currency', currency: 'USD' })} neste ciclo</span>
                 </div>
-                <div className="mt-2 h-2 rounded bg-white/5">
-                  <div
-                    className={`h-2 rounded ${budgetPct > 85 ? 'bg-red-400' : budgetPct > 60 ? 'bg-amber-400' : 'bg-emerald-400'}`}
-                    style={{ width: `${budgetPct}%` }}
-                  />
+                <div className="settings-spend-track" role="progressbar"
+                  aria-label="Consumo do orçamento" aria-valuemin={0}
+                  aria-valuemax={100} aria-valuenow={Math.round(pct)}>
+                  <span style={{ width: pct + '%' }} data-warning={pct >= 85 ? 'true' : undefined} />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">
-                  {cost.current.calls.toLocaleString('en-US')} calls · {(cost.current.inTok / 1000).toFixed(0)}k input tokens · {(cost.current.outTok / 1000).toFixed(0)}k output.
-                  Once the cap is reached, the app stops calling the AI (data collection keeps running).
+                <p className="settings-explain mt-3">
+                  {Number(cost.current.calls).toLocaleString('pt-BR')} chamadas ·
+                  {' '}{Number(cost.current.inTok).toLocaleString('pt-BR')} tokens de entrada ·
+                  {' '}{Number(cost.current.outTok).toLocaleString('pt-BR')} de saída.
+                  Ao atingir o teto registrado, novas solicitações de IA são suspensas; a coleta de fontes não depende disso.
                 </p>
                 {cost.byPurpose.length > 0 && (
-                  <div className="mt-3 flex flex-col gap-1.5">
-                    {cost.byPurpose.map((p) => (
-                      <div key={p.purpose} className="flex justify-between text-xs">
-                        <span className="text-slate-400">{p.purpose.replace(/_/g, ' ')}</span>
-                        <span className="text-slate-500">${p.cost.toFixed(3)} · {p.calls} calls</span>
+                  <div className="settings-cost-purposes">
+                    {cost.byPurpose.map((item) => (
+                      <div key={item.purpose}>
+                        <span>{item.purpose.replace(/_/g, ' ')}</span>
+                        <strong>{Number(item.cost).toLocaleString('pt-BR', { style: 'currency', currency: 'USD' })}</strong>
                       </div>
                     ))}
                   </div>
                 )}
-                {isAdm && (
-                  <CostControl
-                    budget={cost.budget}
-                    lifetimeCost={cost.lifetime.cost}
-                    lifetimeCalls={cost.lifetime.calls}
-                    resetAt={cost.resetAt}
-                  />
-                )}
               </>
             ) : (
-              <p className="text-sm text-amber-400/90">
-                The active AI engine has no key yet: add one above. Data collection works, but sentiment, briefs and ratings stay pending.
-              </p>
+              <div className="settings-notice" role="status">
+                <AlertCircle size={18} aria-hidden="true" />
+                <p>
+                  <strong>Configuração de IA incompleta.</strong> Configure a conexão, os modelos e, se usar um
+                  provedor personalizado, as tarifas por token. A coleta continua, mas análises e resumos
+                  automáticos permanecem indisponíveis.
+                </p>
+              </div>
+            )}
+            {isAdm && (
+              <CostControl budget={cost.budget} lifetimeCost={cost.lifetime.cost}
+                lifetimeCalls={cost.lifetime.calls} resetAt={cost.resetAt} />
             )}
           </section>
         </div>
 
-        {/* Colonna costi delle fonti a pagamento */}
-        <section className="panel h-fit px-5 py-4">
-          <h2 className="mb-1 text-sm font-semibold text-slate-300">Paid data sources</h2>
-          <p className="mb-3 text-[11px] leading-relaxed text-slate-600">
-            The budget above meters only the <span className="text-slate-400">AI</span> spend, because Radar makes those calls itself and can count the tokens.
-            Paid data sources are different: they are billed <span className="text-slate-400">directly by each provider</span> as a flat subscription or a request quota —
-            Radar can’t meter that cost. You control it by entering or removing the key (in the <span className="text-slate-400">Sources</span> tab) and by managing limits on the provider’s own dashboard.
+        <section className="panel settings-panel h-fit px-6 py-6">
+          <div className="settings-section-heading">
+            <ExternalLink size={18} aria-hidden="true" />
+            <h2>Fontes com contratação externa</h2>
+          </div>
+          <p className="settings-explain mt-2">
+            O orçamento acima acompanha somente o uso de IA registrado pelo VigiaElus. APIs de notícias,
+            redes sociais e dados especializados podem cobrar diretamente no site do fornecedor.
+            Consulte as cotas e os preços contratados, sem presumir que uma conexão seja gratuita.
           </p>
 
-          {paidActive.length > 0 ? (
-            <div className="flex flex-col gap-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-400/80">Active on your account</p>
-              {paidActive.map((c) => (
-                <div key={c.id} className="rounded-lg border border-[var(--border)] bg-white/[0.02] px-3 py-2">
-                  <p className="text-sm font-medium text-slate-200">{SOURCE_META[c.id]?.label ?? c.id}</p>
-                  <p className="text-[11px] leading-snug text-slate-500">{PAID_NOTE[c.id] ?? 'Billed directly by the provider.'}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-slate-500">
-              No paid source is active. All data currently comes from free sources — your only metered cost is the AI budget on the left.
-            </p>
-          )}
-
-          <div className="mt-4 flex flex-col gap-1.5 border-t border-[var(--border)] pt-3">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Reference — how each paid source is billed</p>
-            {(['x', 'newsapi', 'instagram', 'facebook', 'tiktok', 'linkedin'] as const).map((id) => (
-              <p key={id} className="text-[11px] text-slate-500">
-                <span className="text-slate-300">{SOURCE_META[id]?.label ?? id}:</span> {PAID_NOTE[id]}
-              </p>
-            ))}
-            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-slate-600">
-              Manage source keys in the <span className="text-sky-400">Sources</span> tab. <ExternalLink className="size-3" />
-            </p>
+          <div className="settings-paid-status">
+            <strong>{activePaid.length} {activePaid.length === 1 ? 'fonte com credenciais' : 'fontes com credenciais'}</strong>
+            <span>Credencial cadastrada não comprova disponibilidade da API ou coleta bem-sucedida.</span>
           </div>
+
+          <div className="settings-cost-purposes">
+            {activePaid.length ? activePaid.map((connector) => (
+              <div key={connector.id} className="settings-paid-item">
+                <strong>{SOURCE_META[connector.id]?.label ?? connector.id}</strong>
+                <span>{PAID_NOTE[connector.id] ?? 'Verifique as condições comerciais do fornecedor.'}</span>
+              </div>
+            )) : <p className="settings-explain">Nenhuma credencial de fonte premium foi cadastrada neste ambiente.</p>}
+          </div>
+
+          <h3 className="settings-minor-heading">Referência de contratação</h3>
+          {(['x', 'newsapi', 'instagram', 'facebook', 'tiktok', 'linkedin', 'talkwalker'] as const).map((id) => (
+            <p className="settings-reference-row" key={id}>
+              <strong>{SOURCE_META[id]?.label ?? id}</strong>
+              <span>{PAID_NOTE[id]}</span>
+            </p>
+          ))}
+
+          <Link className="settings-text-link" href="/impostazioni/fonti">
+            Verificar fontes e configurar chaves <ExternalLink size={15} />
+          </Link>
         </section>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,5 +1,8 @@
 import { dashboardData, getProjects, getRecentAlertCount, listeningData, briefList } from '@/lib/data';
 import { getCurrentUser } from '@/lib/auth';
+import { getDb } from '@/lib/db';
+import { alerts as alertsTable, mentions } from '@/lib/db/schema';
+import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 
 export type ClientProject = { id: number; name: string };
 
@@ -12,10 +15,27 @@ export async function authorizedClientProject(requestedId?: number): Promise<Cli
 }
 
 export async function clientOverview(projectId: number) {
-  const [dashboard, alerts, briefs] = await Promise.all([
+  const db = await getDb();
+  const since = new Date(Date.now() - 7 * 86_400_000);
+  const previousSince = new Date(Date.now() - 14 * 86_400_000);
+  const [dashboard, alerts, briefs, previous, pending, negativeTotal, negativeRows, recentAlerts] = await Promise.all([
     dashboardData(projectId),
     getRecentAlertCount(projectId),
     briefList(projectId),
+    db.select({ n: sql<number>`count(*)` }).from(mentions)
+      .where(and(eq(mentions.projectId, projectId), gte(mentions.publishedAt, previousSince), lt(mentions.publishedAt, since))),
+    db.select({ n: sql<number>`count(*)` }).from(mentions)
+      .where(and(eq(mentions.projectId, projectId), gte(mentions.publishedAt, since), isNull(mentions.sentiment))),
+    db.select({ n: sql<number>`count(*)` }).from(mentions)
+      .where(and(eq(mentions.projectId, projectId), gte(mentions.publishedAt, since), inArray(mentions.sentiment, ['negative', 'negativo']))),
+    db.select({ id: mentions.id, title: mentions.title, source: mentions.source,
+      url: mentions.url, publishedAt: mentions.publishedAt }).from(mentions)
+      .where(and(eq(mentions.projectId, projectId), gte(mentions.publishedAt, since), inArray(mentions.sentiment, ['negative', 'negativo'])))
+      .orderBy(desc(mentions.publishedAt)).limit(4),
+    db.select({ id: alertsTable.id, severity: alertsTable.severity,
+      message: alertsTable.message, createdAt: alertsTable.createdAt }).from(alertsTable)
+      .where(and(eq(alertsTable.projectId, projectId), gte(alertsTable.createdAt, new Date(Date.now() - 24 * 3600_000))))
+      .orderBy(desc(alertsTable.createdAt)).limit(4),
   ]);
   const items = dashboard.latest.slice(0, 7).map((m) => ({
     id: m.id,
@@ -28,6 +48,19 @@ export async function clientOverview(projectId: number) {
   return {
     periodDays: 7,
     mentions: Number(dashboard.kpi.total7) || 0,
+    previousMentions: Number(previous[0]?.n ?? 0),
+    pending: Number(pending[0]?.n ?? 0),
+    negative: Number(negativeTotal[0]?.n ?? 0),
+    latestPublishedAt: dashboard.latest[0]?.publishedAt.toISOString() ?? null,
+    negativeItems: negativeRows.map((item) => ({
+      id: item.id, title: item.title || 'Título não informado', source: item.source,
+      url: item.url || null, publishedAt: item.publishedAt.toISOString(),
+    })),
+    alertItems: recentAlerts.map((item) => ({
+      id: item.id, severity: item.severity, message: item.message,
+      createdAt: item.createdAt.toISOString(),
+    })),
+    briefPreview: briefs[0]?.content?.trim().slice(0, 800) || null,
     sources: Number(dashboard.kpi.sources) || 0,
     averageSentiment: dashboard.kpi.avgSentiment ?? null,
     alerts,

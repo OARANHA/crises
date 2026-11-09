@@ -17,50 +17,67 @@ export type ActionResult = { ok: boolean; msg: string };
 /** Admin: set the API spend budget (USD). */
 export async function updateApiBudget(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await getActionUser();
-  if (!isAdmin(user)) return { ok: false, msg: 'Admins only.' };
+  if (!isAdmin(user)) return { ok: false, msg: 'Apenas administradores podem alterar esta configuração.' };
   const amount = Number(formData.get('budget'));
-  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, msg: 'Enter a positive amount.' };
+  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, msg: 'Informe um valor positivo.' };
   await setMeta('api_budget_usd', Math.round(amount * 100) / 100);
   revalidatePath('/impostazioni/fonti');
-  return { ok: true, msg: `Budget set to $${amount.toFixed(2)}.` };
+  return { ok: true, msg: `Orçamento ajustado para $${amount.toFixed(2)}.` };
 }
 
 /** Admin: choose the AI engine (Anthropic / OpenAI / Grok) that powers every AI feature. */
 export async function updateAiProvider(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await getActionUser();
-  if (!isAdmin(user)) return { ok: false, msg: 'Admins only.' };
+  if (!isAdmin(user)) return { ok: false, msg: 'Apenas administradores podem alterar esta configuração.' };
   const provider = String(formData.get('provider') ?? '').trim();
   const { AI_PROVIDERS } = await import('@/lib/ai-provider');
-  if (!(provider in AI_PROVIDERS)) return { ok: false, msg: 'Unknown provider.' };
+  if (!Object.hasOwn(AI_PROVIDERS, provider)) return { ok: false, msg: 'Provedor desconhecido.' };
   await setMeta('ai_provider', provider);
   revalidatePath('/impostazioni/budget');
-  return { ok: true, msg: `AI engine set to ${AI_PROVIDERS[provider as keyof typeof AI_PROVIDERS].label}.` };
+  return { ok: true, msg: `Motor de IA definido como ${AI_PROVIDERS[provider as keyof typeof AI_PROVIDERS].label}.` };
 }
 
 /** Admin: override the fast/smart model ids for one provider (blank = default). */
 export async function updateAiModels(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await getActionUser();
-  if (!isAdmin(user)) return { ok: false, msg: 'Admins only.' };
+  if (!isAdmin(user)) return { ok: false, msg: 'Apenas administradores podem alterar esta configuração.' };
   const provider = String(formData.get('provider') ?? '').trim();
   const { AI_PROVIDERS } = await import('@/lib/ai-provider');
-  if (!(provider in AI_PROVIDERS)) return { ok: false, msg: 'Unknown provider.' };
-  const fast = String(formData.get('fast') ?? '').trim();
-  const smart = String(formData.get('smart') ?? '').trim();
+  if (!Object.hasOwn(AI_PROVIDERS, provider)) return { ok: false, msg: 'Provedor desconhecido.' };
+  const fast = String(formData.get('fast') ?? '').trim().slice(0, 160);
+  const smart = String(formData.get('smart') ?? '').trim().slice(0, 160);
+  if (provider === 'custom' && (!/^[a-zA-Z0-9._:/-]+$/.test(fast) || !/^[a-zA-Z0-9._:/-]+$/.test(smart))) {
+    return { ok: false, msg: 'Informe os dois identificadores de modelo do provedor compatível.' };
+  }
   await setMeta(`ai_models_${provider}`, { fast, smart });
   revalidatePath('/impostazioni/budget');
-  return { ok: true, msg: 'Models saved.' };
+  return { ok: true, msg: 'Modelos salvos.' };
+}
+
+/** Tarifas customizadas: custo por milhão de tokens informado pelo administrador. */
+export async function updateAiCustomRates(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const actor = await getActionUser();
+  if (!isAdmin(actor)) return { ok: false, msg: 'Apenas o proprietário pode configurar tarifas.' };
+  const input = Number(formData.get('input'));
+  const output = Number(formData.get('output'));
+  if (![input, output].every((value) => Number.isFinite(value) && value > 0 && value <= 100_000)) {
+    return { ok: false, msg: 'Informe tarifas numéricas positivas e finitas, em USD por 1 milhão de tokens.' };
+  }
+  await setMeta('ai_custom_rates_v1', { input, output });
+  revalidatePath('/impostazioni/budget');
+  return { ok: true, msg: 'Tarifas estimadas salvas para o provedor personalizado.' };
 }
 
 /** Admin: reset the spend counter (starts a new window). Requires the admin's own password. */
 export async function resetApiSpend(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await getActionUser();
-  if (!isAdmin(user) || !user) return { ok: false, msg: 'Admins only.' };
+  if (!isAdmin(user) || !user) return { ok: false, msg: 'Apenas administradores podem alterar esta configuração.' };
   const password = String(formData.get('password') ?? '');
-  if (!password) return { ok: false, msg: 'Enter your account password.' };
-  if (!verifyPasswordHash(password, user.passwordHash)) return { ok: false, msg: 'Incorrect password.' };
+  if (!password) return { ok: false, msg: 'Informe a senha da sua conta.' };
+  if (!verifyPasswordHash(password, user.passwordHash)) return { ok: false, msg: 'Senha incorreta.' };
   await setMeta('spend_reset_at', new Date().toISOString());
   revalidatePath('/impostazioni/fonti');
-  return { ok: true, msg: 'Spend counter reset. The all-time total is unchanged.' };
+  return { ok: true, msg: 'Contador do período reiniciado; o histórico foi preservado.' };
 }
 
 function parseKeywords(raw: string): string[] {
@@ -220,7 +237,7 @@ export async function deleteProject(_prev: ActionResult, formData: FormData): Pr
 
   const password = String(formData.get('password') ?? '');
   if (!password) return { ok: false, msg: 'Enter your account password to confirm.' };
-  if (!verifyPasswordHash(password, user.passwordHash)) return { ok: false, msg: 'Incorrect password. Nothing was deleted.' };
+  if (!verifyPasswordHash(password, user.passwordHash)) return { ok: false, msg: 'Senha incorreta. Nothing was deleted.' };
 
   const all = await db.select({ id: projects.id }).from(projects);
   if (all.length <= 1) return { ok: false, msg: 'This is the only project: Radar needs at least one.' };
@@ -323,6 +340,11 @@ export async function saveConnectorKeysAction(connectorId: string, formData: For
   const fields = CREDENTIAL_FIELDS[connectorId];
   if (!fields) return;
 
+  if (connectorId === 'custom') {
+    const { customChatUrl } = await import('@/lib/ai-provider');
+    const incoming = String(formData.get('CUSTOM_OPENAI_ENDPOINT') ?? '').trim();
+    if (incoming) customChatUrl(incoming);
+  }
   const values: Record<string, string> = {};
   for (const f of fields) values[f.env] = String(formData.get(f.env) ?? '');
   await saveConnectorCredentials(connectorId, values);

@@ -1,46 +1,72 @@
-import { Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock3, Database, Info, Radio } from 'lucide-react';
 import { getMeta } from '@/lib/db';
 import { getCurrentProject } from '@/lib/data';
 import {
-  CONNECTORS, SOURCE_CATEGORY, CATEGORY_ORDER, CATEGORY_LABEL, type SourceCategory,
+  CONNECTORS, SOURCE_CATEGORY, CATEGORY_ORDER, type SourceCategory,
 } from '@/lib/connectors';
 import { getConnectorCredStatuses, hydrateConnectorCredentials, type ConnectorCredStatus } from '@/lib/connector-credentials';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { ConnectorKeys } from '@/components/connector-keys';
-import { PageHeader, fmtDate } from '@/components/ui';
-import { getT } from '@/lib/i18n';
+import { PageHeader } from '@/components/ui';
 import type { SourceStatus } from '@/lib/ingest';
 
-export const metadata = { title: 'Sources' };
+export const metadata = { title: 'Fontes de monitoramento' };
 
-// What each source is and what data Radar collects from it: shown in the hover tooltip.
+const labelPt: Record<string, string> = {
+  gdelt: 'GDELT · notícias internacionais',
+  rss: 'Feeds RSS personalizados',
+  linkedin_web: 'LinkedIn (busca pública)',
+  newsdata: 'NewsData.io',
+};
+
+function fmtFonte(date: Date | string): string {
+  return new Date(date).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+}
+
+
+const CATEGORY_LABEL: Record<SourceCategory, string> = {
+  general: 'Notícias e cobertura geral',
+  finance: 'Economia e empresas',
+  academic: 'Pesquisa acadêmica',
+  tech: 'Tecnologia',
+  social: 'Redes sociais e comunidades',
+  video: 'Vídeos',
+  audio: 'Podcasts e áudio',
+};
+
 const SOURCE_INFO: Record<string, string> = {
-  googlenews: 'Google’s news aggregator. Collects public articles from thousands of outlets matching your keywords, with title, outlet and date. Ideal for mainstream press coverage.',
-  gdelt: 'Global news index in 65+ languages (100,000+ outlets worldwide). Collects international articles by keyword: perfect for multilingual, cross-country monitoring.',
-  reddit: 'Public discussions from subreddits. Collects posts and comments citing your terms, with votes and the community they belong to. Great for opinions and raw sentiment.',
-  bluesky: 'Open social network (AT Protocol). Collects public posts by keyword, with author and interactions. Good for tech conversations and early adopters.',
-  mastodon: 'Federated social network. Collects public posts (toots) from instances that mention your terms, with author and engagement.',
-  hackernews: 'Y Combinator’s tech community. Collects stories and comments citing your terms, with score and discussion. Great for technology and startup topics.',
-  youtube: 'Public YouTube videos. Collects videos by keyword with title, channel, date and views. Requires a free Google key.',
-  telegram: 'Only the public channels you choose (set them in the project): Radar reads those channels’ messages. It does not search across all of Telegram.',
-  rss: 'Any site, blog or outlet offering an RSS/Atom feed. Add the URLs in the project and Radar collects their articles automatically. Unlimited feeds.',
-  x: 'Public X (Twitter) posts in real time by keyword, with author, hashtags and engagement (likes, reposts, replies). Requires a paid API (Basic plan).',
-  instagram: 'Hashtag search via the Meta Graph API: collects public posts using the hashtags tied to your keywords, with author and interactions. Requires a Business account + Meta app.',
-  facebook: 'Posts of the pages you link to your token (watchlist model), not all of Facebook. Collects those pages’ posts with reactions, comments and shares.',
-  tiktok: 'Public videos via the Research API (approval-gated by TikTok). Collects videos by keyword with description, hashtags and metrics (likes, comments, views).',
-  linkedin: 'Posts from your company page via the official LinkedIn API (full text, real metrics). LinkedIn does not allow public third-party search, so this covers ONLY your organization — for everyone else’s public posts see "LinkedIn (web)".',
-  linkedin_web: 'Public LinkedIn posts and articles by ANY author, found through the Tavily search index (official API, 1,000 free searches/month). A different acquisition model from "LinkedIn (page)": you get partial excerpts with a link to the original, but no engagement metrics. Legal: it queries Tavily, never LinkedIn’s servers.',
-  newsapi: 'Aggregator of ~150,000 outlets with full-text boolean search. Collects articles by advanced query: a premium alternative to GDELT/Google News. Requires an API key.',
-  stackexchange: 'Questions (by title, not full text) from Stack Overflow plus 5 other Stack Exchange communities: money, workplace, travel, parenting, general computing (Super User). Works immediately, no key — the shared anonymous quota is low, so set STACK_EXCHANGE_KEY (free, from stackapps.com) as an environment variable if you need more volume.',
-  github: 'Issues and pull requests matching your terms in their title, across all of public GitHub — with the real issue text, not just the title. Automated bot issues (changelog trackers, scheduled digests) are filtered out. Works immediately, no key — GitHub’s unauthenticated search limit is tight (10 requests/minute), so set GITHUB_TOKEN (a free personal access token) as an environment variable if you need more volume.',
-  discord: 'Messages from the channels of a Discord server you administer, via your own bot (watchlist model, like Facebook) — Discord does not offer search across other servers. Requires a free bot invited to your server, with the Message Content Intent enabled for it in the Developer Portal.',
-  'sec-edgar': 'Filings by any US-listed company matching your terms: 8-K material events, 10-K/10-Q reports, DEF 14A proxy statements. Free, no key — official US government data (SEC.gov), covers no other market. The search only returns filing metadata, not the document text, so entries show the company, filing type and exhibit description with a link to read the real thing.',
-  arxiv: 'Academic papers (computer science, physics, math, quantitative biology and more) matching your terms, with the full abstract included — official free API, no key. arXiv’s own search does light stemming, so every result is re-checked here for a literal match before being kept.',
+  googlenews: 'Notícias públicas agregadas pelo Google News. A disponibilidade e a relevância dependem das consultas configuradas.',
+  gdelt: 'Índice global de notícias. A API pode responder com limites temporários ou indisponibilidade.',
+  rss: 'Feeds RSS/Atom cadastrados em cada projeto. Somente as URLs configuradas são consultadas.',
+  reddit: 'Discussões públicas de comunidades acessíveis pela API do Reddit.',
+  bluesky: 'Publicações públicas encontradas na rede Bluesky.',
+  mastodon: 'Publicações públicas disponíveis em instâncias federadas.',
+  hackernews: 'Publicações e discussões públicas da comunidade Hacker News.',
+  youtube: 'Resultados públicos da API de vídeos. Requer credencial e cota da plataforma Google.',
+  telegram: 'Mensagens de canais públicos definidos no projeto; não equivale a uma pesquisa global no Telegram.',
+  x: 'Publicações acessíveis pelo plano e permissões contratados na API do X.',
+  instagram: 'Busca por hashtags autorizadas pela API Meta, sujeita às permissões da conta profissional.',
+  facebook: 'Publicações das páginas ligadas ao token autorizado. Não cobre todo o Facebook.',
+  tiktok: 'Vídeos acessíveis pela API de pesquisa, sujeita à aprovação de acesso.',
+  linkedin: 'Publicações da organização autorizada pela API oficial do LinkedIn.',
+  linkedin_web: 'Resultados públicos encontrados por mecanismo de busca externo; não incluem necessariamente métricas sociais.',
+  newsapi: 'Notícias de veículos indexados pelo serviço NewsAPI, de acordo com o plano contratado.',
+  newsdata: 'Notícias e resultados disponíveis pela API NewsData.io, com cotas próprias.',
+  stackexchange: 'Perguntas públicas de comunidades Stack Exchange compatíveis com as consultas.',
+  github: 'Questões e solicitações públicas encontradas no GitHub.',
+  discord: 'Mensagens de canais aos quais o bot autorizado tem acesso.',
+  'sec-edgar': 'Documentos e comunicados de companhias listadas nos Estados Unidos, publicados pela SEC.',
+  arxiv: 'Resumos de artigos acadêmicos encontrados no arXiv.',
+  lemmy: 'Publicações públicas em comunidades federadas na rede Lemmy.',
+  podcastindex: 'Programas e episódios de podcast acessíveis pelo Podcast Index.',
+  talkwalker: 'Dados disponíveis no projeto contratado e configurado no Talkwalker.',
+  yelp: 'Avaliações permitidas pelas credenciais e condições de uso da API Yelp.',
 };
 
 export default async function FontiPage() {
-  const t = await getT();
-  // Hydrate saved keys before reading the "active" status of the connectors.
   await hydrateConnectorCredentials();
   const project = await getCurrentProject();
   const [sourceStatus, credStatuses, currentUser] = await Promise.all([
@@ -48,75 +74,73 @@ export default async function FontiPage() {
     getConnectorCredStatuses(), getCurrentUser(),
   ]);
   const canEditKeys = isAdmin(currentUser);
+  const nowMs = Date.now();
+  const recorded = CONNECTORS.filter((connector) => Boolean(sourceStatus?.[connector.id]));
+  const ok = recorded.filter((connector) => sourceStatus?.[connector.id]?.ok).length;
+  const failed = recorded.length - ok;
 
   return (
-    <>
-      <PageHeader
-        title={t('page.sources.title', 'Sources')}
-        subtitle="Status of the listening sources and their API keys. AI spend and budget are in the Budget tab."
-      />
-
-      <div className="max-w-3xl">
-        <section className="panel px-5 py-4">
-          <h2 className="mb-3 text-sm font-semibold text-slate-300">Source status</h2>
-
-          <TierSection
-            heading="Free" headingClass="text-emerald-400/80"
-            connectors={CONNECTORS.filter((c) => c.tier === 'free')}
-            sourceStatus={sourceStatus} credStatuses={credStatuses} canEditKeys={canEditKeys} showKeys={false}
-          />
-          <TierSection
-            heading="Free · requires a free key" headingClass="text-sky-400/80"
-            description="Free, but you need to register a free API key with the service. Enter it here: the source turns on right away."
-            connectors={CONNECTORS.filter((c) => c.tier === 'freekey')}
-            sourceStatus={sourceStatus} credStatuses={credStatuses} canEditKeys={canEditKeys} showKeys
-          />
-          <TierSection
-            heading="Premium — paid" headingClass="text-amber-400/80"
-            description={<>Connectors are ready: enter your API keys here, without touching code. They turn on right away and apply to the whole account.
-              Their cost is billed by each provider — see the <span className="text-slate-400">Budget</span> tab.</>}
-            connectors={CONNECTORS.filter((c) => c.tier === 'premium')}
-            sourceStatus={sourceStatus} credStatuses={credStatuses} canEditKeys={canEditKeys} showKeys
-          />
-        </section>
+    <div className="vigia-settings-quality settings-sources">
+      <PageHeader title="Fontes de monitoramento"
+        subtitle="Acompanhe os registros de coleta e configure credenciais. Um indicador de sucesso não garante cobertura completa." />
+      <div className="settings-source-summary" aria-label="Resumo do estado das fontes">
+        <div><Database size={19} aria-hidden="true" /><strong>{CONNECTORS.length}</strong><span>fontes integradas</span></div>
+        <div><CheckCircle2 size={19} aria-hidden="true" /><strong>{ok}</strong><span>últimas consultas com sucesso</span></div>
+        <div><AlertTriangle size={19} aria-hidden="true" /><strong>{failed}</strong><span>falhas na última consulta registrada</span></div>
+        <div><Clock3 size={19} aria-hidden="true" /><strong>{recorded.length}</strong><span>fontes com histórico de consulta</span></div>
       </div>
-    </>
+      <p className="settings-source-disclaimer">
+        Os estados abaixo correspondem às últimas consultas registradas pelo sistema geral. Coletas específicas do piloto
+        podem possuir seu próprio histórico; ausência de status não significa que uma fonte nunca foi utilizada.
+      </p>
+
+      <TierSection heading="Fontes sem chave obrigatória"
+        description="Disponíveis para coleta conforme a configuração do projeto e os limites de cada serviço."
+        connectors={CONNECTORS.filter((connector) => connector.tier === 'free')}
+        sourceStatus={sourceStatus} credStatuses={credStatuses} canEditKeys={canEditKeys} showKeys={false} nowMs={nowMs}/>
+
+      <TierSection heading="Fontes com chave gratuita"
+        description="Requerem cadastro no serviço de origem. Configure as chaves somente quando necessárias."
+        connectors={CONNECTORS.filter((connector) => connector.tier === 'freekey')}
+        sourceStatus={sourceStatus} credStatuses={credStatuses} canEditKeys={canEditKeys} showKeys nowMs={nowMs}/>
+
+      <TierSection heading="Fontes sujeitas a contratação ou aprovação"
+        description="A cobrança e as permissões dependem de cada fornecedor. Uma chave salva não confirma acesso ativo."
+        connectors={CONNECTORS.filter((connector) => connector.tier === 'premium')}
+        sourceStatus={sourceStatus} credStatuses={credStatuses} canEditKeys={canEditKeys} showKeys nowMs={nowMs}/>
+    </div>
   );
 }
 
-/**
- * Un livello (gratis / gratis con chiave / a pagamento), suddiviso per
- * categoria tematica al suo interno. Le tre sezioni della pagina erano
- * identiche a parte lo "showKeys": tenerle come un unico componente evita
- * di ripetere tre volte la stessa logica di raggruppamento.
- */
-function TierSection({ heading, headingClass, description, connectors, sourceStatus, credStatuses, canEditKeys, showKeys }: {
-  heading: string; headingClass: string; description?: React.ReactNode;
+function TierSection({ heading, description, connectors, sourceStatus, credStatuses, canEditKeys, showKeys, nowMs }: {
+  heading: string; description: string;
   connectors: (typeof CONNECTORS)[number][];
   sourceStatus?: SourceStatus | null; credStatuses: Record<string, ConnectorCredStatus>;
-  canEditKeys: boolean; showKeys: boolean;
+  canEditKeys: boolean; showKeys: boolean; nowMs: number;
 }) {
-  if (connectors.length === 0) return null;
-  const byCategory = CATEGORY_ORDER
-    .map((cat) => ({ cat, items: connectors.filter((c) => (SOURCE_CATEGORY[c.id] as SourceCategory | undefined) === cat) }))
-    .filter((g) => g.items.length > 0);
+  if (!connectors.length) return null;
+  const categories = CATEGORY_ORDER
+    .map((category) => ({
+      category, items: connectors.filter((connector) => SOURCE_CATEGORY[connector.id] === category),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
-    <div className="mt-4 first:mt-0">
-      <p className={`mb-2 text-[10px] font-semibold uppercase tracking-widest ${headingClass}`}>{heading}</p>
-      {description && <p className="mb-2 text-[11px] text-slate-600">{description}</p>}
-      <div className="flex flex-col gap-3">
-        {byCategory.map(({ cat, items }) => (
-          <div key={cat}>
-            {byCategory.length > 1 && (
-              <p className="mb-1.5 text-[10px] font-medium text-slate-600">{CATEGORY_LABEL[cat]}</p>
-            )}
-            <div className="flex flex-col gap-2">
-              {items.map((c) => (
-                <div key={c.id}>
-                  <SourceRow c={c} st={sourceStatus?.[c.id]} />
-                  {showKeys && canEditKeys && credStatuses[c.id] && (
-                    <ConnectorKeys connectorId={c.id} fields={credStatuses[c.id].fields} />
+    <section className="panel settings-panel settings-source-section">
+      <div className="settings-section-heading">
+        <Radio size={18} aria-hidden="true"/><h2>{heading}</h2>
+      </div>
+      <p className="settings-explain">{description}</p>
+      <div className="settings-source-categories">
+        {categories.map(({ category, items }) => (
+          <div className="settings-source-category" key={category}>
+            <h3>{CATEGORY_LABEL[category]}</h3>
+            <div className="settings-source-rows">
+              {items.map((connector) => (
+                <div key={connector.id}>
+                  <SourceRow connector={connector} status={sourceStatus?.[connector.id]} nowMs={nowMs} />
+                  {showKeys && canEditKeys && credStatuses[connector.id] && (
+                    <ConnectorKeys connectorId={connector.id} fields={credStatuses[connector.id].fields} />
                   )}
                 </div>
               ))}
@@ -124,54 +148,36 @@ function TierSection({ heading, headingClass, description, connectors, sourceSta
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-/** Status row for a source: dot, name, last-collection outcome. */
-function SourceRow({ c, st }: {
-  c: (typeof CONNECTORS)[number];
-  st?: SourceStatus[string];
+function SourceRow({ connector, status, nowMs }: {
+  connector: (typeof CONNECTORS)[number];
+  status?: SourceStatus[string]; nowMs: number;
 }) {
-  const enabled = c.enabled();
-  // Amber = temporary hiccup (last run failed but it collected within the last
-  // 24h, typical of GDELT's shared rate limit); red = genuinely down.
-  const recentOk = st?.lastOkAt && Date.now() - new Date(st.lastOkAt).getTime() < 24 * 3600_000;
-  const dot = !enabled
-    ? 'bg-red-400/70'
-    : st?.ok === false
-      ? (recentOk ? 'bg-amber-400' : 'bg-red-400')
-      : 'bg-emerald-400';
-  const info = SOURCE_INFO[c.id];
+  const enabled = connector.enabled();
+  const displayName = labelPt[connector.id] || connector.label;
+  const recentOk = Boolean(status?.lastOkAt && nowMs - new Date(status.lastOkAt).getTime() < 24 * 3600_000);
+  const state = !enabled ? 'missing' : !status ? 'unknown'
+    : status.ok ? 'ok' : recentOk ? 'partial' : 'failed';
+  const label = !enabled ? 'Não configurada' : !status ? 'Consulta ainda não registrada'
+    : status.ok ? String(status.count) + ' novos registros · ' + fmtFonte(status.at)
+      : recentOk ? 'Falha recente · houve coleta anterior' : 'Falha na última consulta';
+  const info = SOURCE_INFO[connector.id] ?? 'Fonte integrada conforme as permissões e o plano contratado.';
+
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <span className={`size-2 shrink-0 rounded-full ${dot}`} />
-      <span className="group relative flex w-32 shrink-0 items-center gap-1">
-        <span className="truncate">{c.label}</span>
-        {info && (
-          <>
-            <Info className="size-3 shrink-0 cursor-help text-slate-600 transition group-hover:text-sky-400" />
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 hidden w-64 rounded-lg border border-[var(--border)] bg-[var(--panel-2)] p-2.5 text-[11px] font-normal leading-relaxed text-slate-300 shadow-xl group-hover:block"
-            >
-              <span className="mb-1 block font-semibold text-slate-100">{c.label}</span>
-              {info}
-            </span>
-          </>
-        )}
-      </span>
-      <span className="truncate text-xs text-slate-500" title={!enabled ? c.disabledReason : st?.ok === false ? st.error : undefined}>
-        {!enabled
-          ? c.disabledReason
-          : st
-            ? st.ok
-              ? `${st.count} new · ${fmtDate(st.at)}`
-              : recentOk
-                ? `temporarily unavailable · last successful collection ${fmtDate(st.lastOkAt!)}`
-                : `error: ${st.error}`
-            : 'awaiting first collection'}
-      </span>
+    <div className="settings-source-row">
+      <div className="settings-source-identity">
+        <span className="settings-source-dot" data-state={state} aria-hidden="true"/>
+        <strong>{displayName}</strong>
+        <details className="settings-source-help">
+          <summary aria-label={'Sobre ' + displayName}><Info size={16} aria-hidden="true"/></summary>
+          <div role="note">{info}</div>
+        </details>
+      </div>
+      <span className="settings-source-result"
+        title={status?.error || connector.disabledReason || undefined}>{label}</span>
     </div>
   );
 }
