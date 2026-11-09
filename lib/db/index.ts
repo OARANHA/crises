@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import * as schema from './schema';
+import { initialAdminCredentials } from './admin-bootstrap';
 
 // Un solo tipo per entrambi i driver: l'API di query drizzle è identica,
 // cambia solo il trasporto (Neon HTTP in produzione, PGlite in locale).
@@ -517,26 +518,12 @@ async function seed(db: DB) {
   ]);
 }
 
-// Amministratore iniziale, creato al primo avvio se il database è vuoto.
-// Configuralo con le variabili d'ambiente ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME.
-// Se non le imposti, viene creato un admin di default con password nota: in quel
-// caso l'app OBBLIGA a cambiarla al primo accesso. Nuovi membri si aggiungono
-// dalla UI (Impostazioni → Team), non serve toccare il codice.
-function seedAdmin() {
-  const email = (process.env.ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
-  const password = process.env.ADMIN_PASSWORD || 'changeme';
-  const name = process.env.ADMIN_NAME || 'Admin';
-  // Password di default (nessuna ADMIN_PASSWORD impostata) => forza il cambio.
-  const mustChange = process.env.ADMIN_PASSWORD ? 0 : 1;
-  return { name, email, password, mustChange };
-}
-
 async function seedUsers(db: DB) {
   const existing = await db.select({ id: schema.users.id }).from(schema.users).limit(1);
   if (existing.length > 0) return;
 
   const { hashPassword } = await import('@/lib/password');
-  const a = seedAdmin();
+  const a = initialAdminCredentials();
   const [admin] = await db.insert(schema.users).values({
     name: a.name, email: a.email, role: 'admin',
     aiEnabled: 1, mustChangePassword: a.mustChange,

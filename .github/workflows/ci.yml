@@ -7,7 +7,7 @@ on:
   push:
     branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-crfrs-etapas-1-2, feat/vigiaelus-client-portal-scan-v8]
   pull_request:
-    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-global-ui]
+    branches: [main, fix/radar-homologacao-p0, feat/vigiaelus-global-ui, feat/vigiaelus-client-portal-scan-v8]
 
 jobs:
   build:
